@@ -1,9 +1,60 @@
-<!DOCTYPE html>
+			<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Open Space Web-Map builder Code</title>
+<!-- Download OpenSpace API using your key -->
+<script type="text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6"></script>
+<script type= "text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/basicmap.js"></script>
+<script type= "text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/searchbox.js"></script>
+<script type="text/javascript">
+//variables for routes
+var linesLayer, points, lineFeature, lineString, routeMarkersLayer, routepos, routesize, routeoffset, routeicon;
+var style_blue = {strokeColor: "#0000CD", strokeOpacity: 0.5, strokeWidth: 4.5};
 
-<html>
+function initmapbuilder()
+{
+//initiate the map
+var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5, 4, 2.5, 2, 1]};
+osMap = new OpenSpace.Map('map', options);
 
-<h2>Dad's Maps</h2>
-
-<p>Placeholder...</p>
-
+//configure map options (basicmap.js)
+setglobaloptions();
+//add a postcode/gazetteer search box (see searchbox.js)
+addSearchBox(1);
+//set the center of the map and the zoom level
+osMap.setCenter(new OpenSpace.MapPoint(618146,88219),12);
+linesLayer = osMap.getVectorLayer();
+// Set up layer for route markers
+routeMarkersLayer = new OpenLayers.Layer.Markers("Route Markers");
+//make a route
+points = new Array();
+points.push(new OpenLayers.Geometry.Point(493350,336010));
+points.push(new OpenLayers.Geometry.Point(494350,263010));
+points.push(new OpenLayers.Geometry.Point(557350,249010));
+points.push(new OpenLayers.Geometry.Point(545350,186010));
+points.push(new OpenLayers.Geometry.Point(456350,182010));
+points.push(new OpenLayers.Geometry.Point(432350,263010));
+// create a polyline feature from the array of points
+lineString = new OpenLayers.Geometry.LineString(points);
+lineFeature = new OpenLayers.Feature.Vector(lineString, null, style_blue);
+linesLayer.addFeatures([lineFeature]);
+//crate a route start/end marker
+routepos = new OpenSpace.MapPoint(493350,336010);
+routesize = new OpenLayers.Size(33,45);
+routeoffset = new OpenLayers.Pixel(-5,-37);
+routeicon = new OpenSpace.Icon('https://openspace.ordnancesurvey.co.uk/osmapapi/img_versions/img_1.1/mapbuilder/routemarker-start.png', routesize, routeoffset, null, null);
+routeMarkersLayer.addMarker(new OpenLayers.Marker(routepos, routeicon));
+//crate a route start/end marker
+routepos = new OpenSpace.MapPoint(432350,263010);
+routesize = new OpenLayers.Size(33,45);
+routeoffset = new OpenLayers.Pixel(-5,-37);
+routeicon = new OpenSpace.Icon('https://openspace.ordnancesurvey.co.uk/osmapapi/img_versions/img_1.1/mapbuilder/routemarker-end.png', routesize, routeoffset, null, null);
+routeMarkersLayer.addMarker(new OpenLayers.Marker(routepos, routeicon));
+osMap.addLayer(routeMarkersLayer);}
+</script>
+</head>
+<body onload="initmapbuilder()">
+<div id="map" style="border: 1px solid black; width:540px; height:440px;"></div>
+</body>
 </html>
+		
