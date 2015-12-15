@@ -1,60 +1,96 @@
-			<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-<title>Open Space Web-Map builder Code</title>
-<!-- Download OpenSpace API using your key -->
-<script type="text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6"></script>
-<script type= "text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/basicmap.js"></script>
-<script type= "text/javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/searchbox.js"></script>
+<meta charset="utf-8">
+<title>Create a polygon</title>
+
+<script type="text/javascript" src="http://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6"></script>
+
+<style>
+  html, body {height: 100%;}
+  #map {width: 700px; height: 500px; border:1px solid black;}
+</style>
+
+
 <script type="text/javascript">
-//variables for routes
-var linesLayer, points, lineFeature, lineString, routeMarkersLayer, routepos, routesize, routeoffset, routeicon;
-var style_blue = {strokeColor: "#0000CD", strokeOpacity: 0.5, strokeWidth: 4.5};
 
-function initmapbuilder()
-{
-//initiate the map
-var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5, 4, 2.5, 2, 1]};
-osMap = new OpenSpace.Map('map', options);
 
-//configure map options (basicmap.js)
-setglobaloptions();
-//add a postcode/gazetteer search box (see searchbox.js)
-addSearchBox(1);
-//set the center of the map and the zoom level
-osMap.setCenter(new OpenSpace.MapPoint(618146,88219),12);
-linesLayer = osMap.getVectorLayer();
-// Set up layer for route markers
-routeMarkersLayer = new OpenLayers.Layer.Markers("Route Markers");
-//make a route
-points = new Array();
-points.push(new OpenLayers.Geometry.Point(493350,336010));
-points.push(new OpenLayers.Geometry.Point(494350,263010));
-points.push(new OpenLayers.Geometry.Point(557350,249010));
-points.push(new OpenLayers.Geometry.Point(545350,186010));
-points.push(new OpenLayers.Geometry.Point(456350,182010));
-points.push(new OpenLayers.Geometry.Point(432350,263010));
-// create a polyline feature from the array of points
-lineString = new OpenLayers.Geometry.LineString(points);
-lineFeature = new OpenLayers.Feature.Vector(lineString, null, style_blue);
-linesLayer.addFeatures([lineFeature]);
-//crate a route start/end marker
-routepos = new OpenSpace.MapPoint(493350,336010);
-routesize = new OpenLayers.Size(33,45);
-routeoffset = new OpenLayers.Pixel(-5,-37);
-routeicon = new OpenSpace.Icon('https://openspace.ordnancesurvey.co.uk/osmapapi/img_versions/img_1.1/mapbuilder/routemarker-start.png', routesize, routeoffset, null, null);
-routeMarkersLayer.addMarker(new OpenLayers.Marker(routepos, routeicon));
-//crate a route start/end marker
-routepos = new OpenSpace.MapPoint(432350,263010);
-routesize = new OpenLayers.Size(33,45);
-routeoffset = new OpenLayers.Pixel(-5,-37);
-routeicon = new OpenSpace.Icon('https://openspace.ordnancesurvey.co.uk/osmapapi/img_versions/img_1.1/mapbuilder/routemarker-end.png', routesize, routeoffset, null, null);
-routeMarkersLayer.addMarker(new OpenLayers.Marker(routepos, routeicon));
-osMap.addLayer(routeMarkersLayer);}
+// Define the osMap variable
+
+var osMap;
+
+// This function creates the map and is called by the div in the HTML
+
+function init()
+
+  {
+    
+// Create new map
+    var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
+    
+    osMap = new OpenSpace.Map('map', options);
+    
+// Set map centre in National Grid Eastings and Northings and select zoom level 6
+
+    osMap.setCenter(new OpenSpace.MapPoint(439000, 114000), 6);
+            
+// Create a new vector layer to hold the polygon  
+    
+    var vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+    
+    osMap.addLayer(vectorLayer);
+    
+// Create polygon style
+    
+    var style_green =
+        {
+            strokeColor: "#ff00ff",
+            strokeOpacity: 1,
+            strokeWidth: 2,
+            fillColor: "#ff00ff",
+            fillOpacity: 0.2
+        };
+    
+// Define polygon area
+    
+    var drawRect = function(points) {
+      
+      var corners = points.map(function(p){
+        return new OpenLayers.Geometry.Point(p[0], p[1]);
+      });
+      var linearRing = new OpenLayers.Geometry.LinearRing(corners);
+      var polygonFeature = new OpenLayers.Feature.Vector(linearRing, null, style_green);
+    
+      vectorLayer.addFeatures([polygonFeature]);  
+                               
+    };
+    
+    var p1 = new OpenLayers.Geometry.Point(439000, 114000);
+    var p2 = new OpenLayers.Geometry.Point(440000, 115000);
+    var p3 = new OpenLayers.Geometry.Point(437000, 116000);
+    var p4 = new OpenLayers.Geometry.Point(436000, 115000);
+    
+    drawRect( [[439000, 114000], [440000, 115000], [437000, 116000], [436000, 115000]]);
+    
+    drawRect( [[439000, 114000], [440000, 115000], [437000, 116000], [436000, 115000]]);
+  
+  }
+
+
+
+
 </script>
-</head>
-<body onload="initmapbuilder()">
-<div id="map" style="border: 1px solid black; width:540px; height:440px;"></div>
+
+
+</head>  
+  
+<body onload="init()">
+  
+<h2>Create a polygon</h2>
+  
+<!-- The div below holds the map -->
+  
+<div id="map"></div>
+  
 </body>
 </html>
-		
