@@ -30,9 +30,9 @@ function init()
     
     osMap = new OpenSpace.Map('map', options);
     
-// Set map centre in National Grid Eastings and Northings and select zoom level 6
+// Set map centre in National Grid Eastings and Northings and select zoom level 0
 
-    osMap.setCenter(new OpenSpace.MapPoint(439000, 114000), 6);
+    osMap.setCenter(new OpenSpace.MapPoint(270000, 720000), 1);
             
 // Create a new vector layer to hold the polygon  
     
@@ -53,9 +53,13 @@ function init()
     
 // Define polygon area
     
-    var drawRect = function(points) {
+    var drawRect = function(p) {
       
-      var corners = points.map(function(p){
+      var coords = [[p[0], p[1]],
+                    [p[2], p[1]],
+                    [p[2], p[3]],
+                    [p[0], p[3]] ]
+      var corners = coords.map(function(p){
         return new OpenLayers.Geometry.Point(p[0], p[1]);
       });
       var linearRing = new OpenLayers.Geometry.LinearRing(corners);
@@ -65,18 +69,10 @@ function init()
                                
     };
     
-    var p1 = new OpenLayers.Geometry.Point(439000, 114000);
-    var p2 = new OpenLayers.Geometry.Point(440000, 115000);
-    var p3 = new OpenLayers.Geometry.Point(437000, 116000);
-    var p4 = new OpenLayers.Geometry.Point(436000, 115000);
-    
-    drawRect( [[439000, 114000], [440000, 115000], [437000, 116000], [436000, 115000]]);
-    
-    drawRect( [[439000, 114000], [440000, 115000], [437000, 116000], [436000, 115000]]);
-  
+    drawRect([270000,   720000, 310000, 760000]);
+    drawRect([294000,   720000, 334000, 760000]);
+    drawRect([334000,   720000, 374000, 760000]);
   }
-
-
 
 
 </script>
@@ -86,7 +82,7 @@ function init()
   
 <body onload="init()">
   
-<h2>Create a polygon</h2>
+<h2>OS Landranger maps</h2>
   
 <!-- The div below holds the map -->
   
