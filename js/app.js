@@ -21,7 +21,7 @@ function init() {
         strokeWidth: 2,
         fillColor: "#ff00ff",
         fillOpacity: 0.4
-    }
+    };
     
     // Create new map
     var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
@@ -40,7 +40,7 @@ function init() {
         selectStyle: selectStyle,
         // onSelect: onFeatureHover,
         // onUnselect: onFeatureHoverOff,
-    });    
+    });
     osMap.addControl(selectControl);
     // selectControl.activate();
 
@@ -66,7 +66,7 @@ function init() {
         var coords = [[p[0], p[1]],
                     [p[2], p[1]],
                     [p[2], p[3]],
-                    [p[0], p[3]] ]
+                    [p[0], p[3]] ];
         var corners = coords.map(function(p){
             return new OpenLayers.Geometry.Point(p[0], p[1]);
         });
@@ -105,13 +105,58 @@ function init() {
         });
         // deactivate again so we can drag map etc
         selectControl.deactivate();
-    }
+    };
+
+
+    // Returns a string of 6 hex characters from a number 0 - 16777215.
+    // E.g. 16777215 -> "ffffff"
+    // E.g. 2 -> "000002"  (adds padding)
+    var b2hex = function(b) {
+        // the 24-shifted bit gives us padding and is removed by substr
+        return ((1 << 24) + b).toString(16).substr(1);
+    };
+
+    var binarytohex = function(binary) {
+        var chunk;
+        var hexes = [];
+        while (binary.length > 0) {
+            chunk = binary.substr(binary.length - 24);
+            binary = binary.substr(0, binary.length - 24);
+            var digit = parseInt(chunk, 2);
+            var hex = b2hex(digit);
+            hexes.push(hex);
+        }
+        hexes.reverse();
+        return hexes.join("");
+    };
+
+    // Returns a 24-length binary number with padding
+    // E.g. 5 -> "000000000000000000000101"
+    var dig2bin = function(digital) {
+        return (16777216 + digital).toString(2).substr(1);
+    };
+    var hextobinary = function(hex) {
+        console.log("hextobinary", hex);
+        var chunk;
+        var binaries = [];
+        while (hex.length > 0) {
+            chunk = hex.substr(hex.length - 6);
+            hex = hex.substr(0, hex.length - 6);
+            console.log("hex, chunk", hex, chunk);
+            var binary = parseInt(chunk, 16);
+            console.log(binary, dig2bin(binary));
+            binaries.push(dig2bin(binary));
+        }
+        binaries.reverse();
+        return binaries.join("");
+    };
 
 
     // Listen for click events on the form that contains checkboxes.
     var handleCheck = function() {
         var inputs = document.getElementsByTagName("input");
         var checked = [];
+        var binary = [];
         for (var i = 0; i < inputs.length; i++) {
             if (inputs[i].type == "checkbox") {
                 if (inputs[i].checked) {
@@ -119,10 +164,40 @@ function init() {
                         var sheetId = inputs[i].attributes['data-id'].value;
                         checked.push(parseInt(sheetId, 10));
                     }
+                    binary.push("1");
+                } else {
+                    binary.push("0");
                 }
             }
         }
+        binary.reverse();
+        binary = binary.join("");
+
+
+
+        // var digit = parseInt(binary, 2);
+
+        console.log(binary);
+        var h = binarytohex(binary);
+
+        var b = hextobinary(h);
+        console.log(b);
+
+        // console.log("digit", digit);
+
+        // console.log("rgb", rgb2hex(0,0,digit));
+
+        // rgb2hex2(digit);
+
+        // console.log("binarytohex", binarytohex(binary));
+
+        // var hex = digit.toString(16);
+        // console.log("hex",  hex);
+
+
+        // var bin = digit.toString(2);
+        // console.log(bin);
         selectSheets(checked);
-    }
+    };
     form.addEventListener("click", handleCheck, false);
   }
