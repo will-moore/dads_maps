@@ -94,17 +94,15 @@ function init() {
     form.innerHTML = html;
 
 
-    // select sheets by IDs
-    var selectSheets = function(ids) {
-        // Unselect, and activate
+    // select sheets with string "100010010..." etc
+    var selectSheets = function(binaryString) {
         selectControl.unselectAll();
-        selectControl.activate();
 
-        ids.forEach(function(sheetId){
-            selectControl.select(sheets[sheetId]);
+        sheets.forEach(function(sheet, idx) {
+            if (binaryString[idx] === "1") {
+                selectControl.select(sheet);
+            }
         });
-        // deactivate again so we can drag map etc
-        selectControl.deactivate();
     };
 
 
@@ -117,6 +115,7 @@ function init() {
     };
 
     var binarytohex = function(binary) {
+        binary = binary.split("").reverse().join("");
         var chunk;
         var hexes = [];
         while (binary.length > 0) {
@@ -136,67 +135,73 @@ function init() {
         return (16777216 + digital).toString(2).substr(1);
     };
     var hextobinary = function(hex) {
-        var chunk;
+        var chunk, binary;
         var binaries = [];
         while (hex.length > 0) {
             chunk = hex.substr(hex.length - 6);
             hex = hex.substr(0, hex.length - 6);
-            var binary = parseInt(chunk, 16);
+            binary = parseInt(chunk, 16);
             binaries.push(dig2bin(binary));
         }
         binaries.reverse();
-        return binaries.join("");
+        binary = binaries.join("");
+        binary = binary.split("").reverse().join("");
+        return binary;
+    };
+
+
+    var getCheckboxes = function() {
+        var checkboxes = [];
+        var inputs = document.getElementsByTagName("input");
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].type == "checkbox" && inputs[i].attributes['data-id']) {
+                checkboxes.push(inputs[i]);
+            }
+        }
+        return checkboxes;
     };
 
 
     // Listen for click events on the form that contains checkboxes.
     var handleCheck = function() {
         var inputs = document.getElementsByTagName("input");
-        var checked = [];
-        var binary = [];
-        for (var i = 0; i < inputs.length; i++) {
-            if (inputs[i].type == "checkbox") {
-                if (inputs[i].checked) {
-                    if (inputs[i].attributes['data-id']) {
-                        var sheetId = inputs[i].attributes['data-id'].value;
-                        checked.push(parseInt(sheetId, 10));
-                    }
-                    binary.push("1");
-                } else {
-                    binary.push("0");
-                }
+
+        var checkboxes = getCheckboxes();
+        var binary = checkboxes.map(function(checkbox){
+            if (checkbox.checked) {
+                return "1";
             }
-        }
-        binary.reverse();
+            return "0";
+        });
         binary = binary.join("");
+        selectSheets(binary);
 
-
-
-        // var digit = parseInt(binary, 2);
-
+        // Save to localStorage
         var h = binarytohex(binary);
-
-        console.log("set", h);
         localStorage.setItem('landranger', h);
 
-        // console.log("digit", digit);
-
-        // console.log("rgb", rgb2hex(0,0,digit));
-
-        // rgb2hex2(digit);
-
-        // console.log("binarytohex", binarytohex(binary));
-
-        // var hex = digit.toString(16);
-        // console.log("hex",  hex);
-
-
-        // var bin = digit.toString(2);
-        // console.log(bin);
-        selectSheets(checked);
+        // Validate that we can convert back to get same value
+        var b = hextobinary(h);
+        b = b.substr(0, binary.length);
+        if (b !== binary) {
+            console.log("Ooops! - BUG in converting to hex!");
+            console.log(binary);
+            console.log(b);
+        }
     };
     form.addEventListener("click", handleCheck, false);
 
+
+
+    var setCheckboxes = function setCheckboxes(binaryString) {
+
+        getCheckboxes().forEach(function(checkbox, idx){
+            if (binaryString[idx] === "1") {
+                checkbox.checked = true;
+            }
+        });
+
+    };
 
     console.log("loading...");
     var h = localStorage.getItem('landranger', h);
@@ -204,5 +209,8 @@ function init() {
     if (h) {
         var b = hextobinary(h);
         console.log(b);
+
+        setCheckboxes(b);
+        selectSheets(b);
     }
   }
