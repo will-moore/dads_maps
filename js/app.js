@@ -136,15 +136,12 @@ function init() {
         return (16777216 + digital).toString(2).substr(1);
     };
     var hextobinary = function(hex) {
-        console.log("hextobinary", hex);
         var chunk;
         var binaries = [];
         while (hex.length > 0) {
             chunk = hex.substr(hex.length - 6);
             hex = hex.substr(0, hex.length - 6);
-            console.log("hex, chunk", hex, chunk);
             var binary = parseInt(chunk, 16);
-            console.log(binary, dig2bin(binary));
             binaries.push(dig2bin(binary));
         }
         binaries.reverse();
@@ -177,11 +174,10 @@ function init() {
 
         // var digit = parseInt(binary, 2);
 
-        console.log(binary);
         var h = binarytohex(binary);
 
-        var b = hextobinary(h);
-        console.log(b);
+        console.log("set", h);
+        localStorage.setItem('landranger', h);
 
         // console.log("digit", digit);
 
@@ -200,4 +196,13 @@ function init() {
         selectSheets(checked);
     };
     form.addEventListener("click", handleCheck, false);
+
+
+    console.log("loading...");
+    var h = localStorage.getItem('landranger', h);
+    console.log(h);
+    if (h) {
+        var b = hextobinary(h);
+        console.log(b);
+    }
   }
