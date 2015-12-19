@@ -36,32 +36,50 @@ function init() {
         multiple: true,
         clickout: true,
         toggle: true,
-        // hover: true,
         selectStyle: selectStyle,
-        // onSelect: onFeatureHover,
-        // onUnselect: onFeatureHoverOff,
     });
     osMap.addControl(selectControl);
-    // selectControl.activate();
 
-    // function onFeatureHover(feature) {
-    //     // var name = feature.attributes.NAME;
-    //     feature.style.fillOpacity = 0.1;
-
-    //     console.log(feature, feature.style.fillOpacity);
-    // }
-
-    // function onFeatureHoverOff(feature) {
-    //     // var name = feature.attributes.NAME;
-    //     // feature.style.fillOpacity = 0.2;
-
-    //     console.log(feature, feature.style.fillOpacity);
-    // }  
     
     osMap.addLayer(vectorLayer);
+
+    // When we finished drag-move, update the selected
+    // sheets (won't have been selected if off-screen)
+    osMap.events.register('moveend', null, function(event){
+        handleCheck();
+    });
+
+
+    var mouseCoords = {};
+    $(osMap.getViewport())
+    .on('mousemove', function(event) {
+        var ft = vectorLayer.getFeatureFromEvent(event);
+        if (ft) {
+            $("#mapsList .checkbox").css('background', '#fff');
+            var mapId = ft.attributes.id;
+            $("#mapsList input[data-id='" + mapId + "']")
+                .focus()
+                .parent().parent().css('background', '#ddf');
+        }
+    })
+    // We want to know if the 'click' is really a click or a drag-end,
+    // so we check if the location is same as mousedown.
+    .on('mousedown', function(event) {
+        mouseCoords.x = event.clientX;
+        mouseCoords.y = event.clientY;
+    })
+    .on('click', function(event) {
+        if (event.clientX == mouseCoords.x && event.clientY == mouseCoords.y) {
+            var ft = vectorLayer.getFeatureFromEvent(event);
+            if (ft) {
+                var mapId = ft.attributes.id;
+                $("#mapsList input[data-id='" + mapId + "']").click();
+            }
+        }
+    });
     
     // Draw rectangles - p is list of 
-    var drawRect = function(p) {
+    var drawRect = function(p, id) {
       
         var coords = [[p[0], p[1]],
                     [p[2], p[1]],
@@ -71,7 +89,7 @@ function init() {
             return new OpenLayers.Geometry.Point(p[0], p[1]);
         });
         var linearRing = new OpenLayers.Geometry.LinearRing(corners);
-        var polygonFeature = new OpenLayers.Feature.Vector(linearRing, null, baseStyle);
+        var polygonFeature = new OpenLayers.Feature.Vector(linearRing, {'id': id}, baseStyle);
 
         vectorLayer.addFeatures([polygonFeature]);
         return polygonFeature;
@@ -79,7 +97,7 @@ function init() {
     
     var sheets = [];
     DATA.forEach(function(data){
-        var sheetFeature = drawRect(data.coords);
+        var sheetFeature = drawRect(data.coords, data.id);
         sheets.push(sheetFeature);
     });
 
@@ -87,9 +105,7 @@ function init() {
     var chkboxes = DATA.map(function(data){
         return "<div class='checkbox'><label><input type='checkbox' data-id='" + data.id + "'>" + data.id + " " + data.name + "</label> </div>";
     });
-
     var html = chkboxes.join("");
-
     var form = document.getElementById('mapsList');
     form.innerHTML = html;
 
@@ -97,7 +113,6 @@ function init() {
     // select sheets with string "100010010..." etc
     var selectSheets = function(binaryString) {
         selectControl.unselectAll();
-
         sheets.forEach(function(sheet, idx) {
             if (binaryString[idx] === "1") {
                 selectControl.select(sheet);
@@ -164,8 +179,6 @@ function init() {
 
     // Listen for click events on the form that contains checkboxes.
     var handleCheck = function() {
-        var inputs = document.getElementsByTagName("input");
-
         var checkboxes = getCheckboxes();
         var binary = checkboxes.map(function(checkbox){
             if (checkbox.checked) {
@@ -203,13 +216,10 @@ function init() {
 
     };
 
-    console.log("loading...");
+    // On Load, we check localStorage for data
     var h = localStorage.getItem('landranger', h);
-    console.log(h);
     if (h) {
         var b = hextobinary(h);
-        console.log(b);
-
         setCheckboxes(b);
         selectSheets(b);
     }
