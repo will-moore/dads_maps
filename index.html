@@ -7,14 +7,14 @@
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+
 <!-- Optional theme -->
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous"> -->
 
 <!-- Latest compiled and minified JavaScript -->
-<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
- -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 
 <script src="http://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6"></script>
 <script src="js/coords.js"></script>
@@ -28,7 +28,7 @@
     #map {
         width: 100%;
         height: 100%;
-        background: rgb(155, 205, 255);
+        background: white;   
     }
     .non-modal-dialog {
         position: absolute;
@@ -37,6 +37,13 @@
         width: 300px;
         z-index: 999;
         bottom: -5px;
+    }
+    .scrollableBody {
+        overflow-y: scroll;
+        position: absolute;
+        top: 50px;
+        bottom: 0;
+        padding-top: 0
     }
 </style>
 
@@ -50,14 +57,70 @@
 
 <!-- Dialog on right with all sheets listed -->
 <div class="modal-dialog non-modal-dialog draggable-dialog ui-draggable">
-    <div class="modal-content" style="overflow-y: scroll; height: 100%">
-        <div class="modal-body">
+    <div class="modal-content" style="height: 100%; overflow: hidden">
+        <div class="modal-header" style="height: 50px">
+            <h5 class="modal-title">
+                Dad's maps
+                <a id="about" href="#" data-toggle="modal" data-target="#aboutModal"><span class="pull-right badge">about</span></a>
+            </h5>
+        </div>
+        <div class="modal-body scrollableBody">
             <form id="mapsList">
                 <!-- sheets listed here -->
             </form>
         </div>
     </div><!-- /.modal-content -->
 </div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="aboutModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">About "Dad's maps"</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+            This is a simple tool for keeping track of the Ordnance Survey Landranger maps that you own,
+            and showing the coverage of them across the UK. <br>
+            The checked maps are automatically saved in the browser on your device, even when you close the window,
+            so you don't need to save as you go.
+        </p>
+        <p>
+            The idea for this came from a recent visit home, when my Dad was trying to sort his maps, together with
+            me hearing about the availability of
+            <a href="https://www.ordnancesurvey.co.uk/business-and-government/products/opendata-products.html">
+                Ordnance Survey Open Data</a>.
+        </p>
+        <p>
+            I found that the Landranger sheet names and coordinates are not publicly available but after
+            <a href="https://www.ordnancesurvey.co.uk/forums/discussion/comment/1013441/">
+                asking for the data on their forums</a>,
+            the Ordnance Survey team eventually prepared and sent me a spreadsheet of
+            everything I needed! So thank you very much to them!
+        </p>
+        <p>
+            Then it was just a case of using the OS
+            <a href="https://www.ordnancesurvey.co.uk/business-and-government/products/os-openspace/api/index.html">
+                Open Space API
+            </a> to build this app, which you can <a href="https://github.com/will-moore/dads_maps">
+            find on github</a>.
+        </p>
+        <p>
+            Enjoy it!
+        </p>
+        <p>
+            Any feedback etc please contact me at <a href="https://twitter.com/will_j_moore">@will_j_moore</a>
+        </p>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 
   
 </body>
