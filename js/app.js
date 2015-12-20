@@ -13,14 +13,14 @@ function init() {
         strokeOpacity: 1,
         strokeWidth: 2,
         fillColor: "#ff00ff",
-        fillOpacity: 0.1
+        fillOpacity: 0
     };
     var selectStyle = {
         strokeColor: "#ff00ff",
         strokeOpacity: 1,
         strokeWidth: 2,
         fillColor: "#ff00ff",
-        fillOpacity: 0.4
+        fillOpacity: 0.3
     };
     
     // Create new map

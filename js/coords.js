@@ -116,7 +116,7 @@ var DATA = [{"coords": ["429000", "1180000", "469000", "1220000"], "id": 1, "nam
 {"coords": ["240000", "345000", "280000", "385000"], "id": 115, "name": "Snowdon / Yr Wyddfa"},
 {"coords": ["280000", "345000", "320000", "385000"], "id": 116, "name": "Denbigh & Colwyn Bay "},
 {"coords": ["320000", "340000", "360000", "380000"], "id": 117, "name": "Chester & Wrexham"},
-{"coords": ["3600000", "380000"], "id": 118, "name": "Stoke-on-Trent & Macclesfield "},
+{"coords": ["360000", "340000", "400000", "380000"], "id": 118, "name": "Stoke-on-Trent & Macclesfield "},
 {"coords": ["400000", "340000", "440000", "380000"], "id": 119, "name": "Buxton & Matlock"},
 {"coords": ["440000", "350000", "480000", "390000"], "id": 120, "name": "Mansfield & Worksop"},
 {"coords": ["478000", "350000", "518000", "390000"], "id": 121, "name": "Lincoln & Newark-on-Trent"},
