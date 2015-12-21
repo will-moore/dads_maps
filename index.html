@@ -45,6 +45,21 @@
         bottom: 0;
         padding-top: 0
     }
+    .badge {
+        margin-left: 10px;
+    }
+
+    .showBookmark .scrollableBody {
+        top: 177px;
+    }
+    .bookmarkMessage {
+        display: none;
+    }
+    .showBookmark .bookmarkMessage {
+        padding: 10px;
+        display: block;
+    }
+
 </style>
 
 </head>  
@@ -56,13 +71,28 @@
 <div id="map"></div>
 
 <!-- Dialog on right with all sheets listed -->
-<div class="modal-dialog non-modal-dialog draggable-dialog ui-draggable">
+<div id="mapsListDialog" class="modal-dialog non-modal-dialog draggable-dialog ui-draggable">
     <div class="modal-content" style="height: 100%; overflow: hidden">
         <div class="modal-header" style="height: 50px">
             <h5 class="modal-title">
                 Dad's maps
-                <a id="about" href="#" data-toggle="modal" data-target="#aboutModal"><span class="pull-right badge">about</span></a>
+                <a id="about" href="#" data-toggle="modal" data-target="#aboutModal" title="Help & Info">
+                    <span class="pull-right badge">about</span>
+                </a>
+                <a id="bookmark" href="#" title="Bookmark currently selected maps">
+                    <span class="pull-right badge">
+                        bookmark
+                    </span>
+                </a>
             </h5>
+        </div>
+        <div class="bookmarkMessage">
+            <div class="alert alert-warning" role="alert">
+                You are viewing <span id="sheetCount">50</span> maps. You can bookmark the current url or share it!
+                <div style="margin-top: 10px">
+                    <button id="edit" type="button" class="btn btn-default">Back to editing</button>
+                </div>
+            </div>
         </div>
         <div class="modal-body scrollableBody">
             <form id="mapsList">

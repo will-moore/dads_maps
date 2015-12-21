@@ -1,8 +1,8 @@
-console.log("DATA", DATA.length);
-
 // Define the osMap variable
 
 var osMap;
+
+var editable;
 
 // This function creates the map and is called by the div in the HTML
 
@@ -46,7 +46,8 @@ function init() {
     // When we finished drag-move, update the selected
     // sheets (won't have been selected if off-screen)
     osMap.events.register('moveend', null, function(event){
-        handleCheck();
+        var binary = getBinaryStringFromCheckboxes();
+        selectSheets(binary);
     });
 
 
@@ -176,9 +177,7 @@ function init() {
         return checkboxes;
     };
 
-
-    // Listen for click events on the form that contains checkboxes.
-    var handleCheck = function() {
+    var getBinaryStringFromCheckboxes = function() {
         var checkboxes = getCheckboxes();
         var binary = checkboxes.map(function(checkbox){
             if (checkbox.checked) {
@@ -187,6 +186,21 @@ function init() {
             return "0";
         });
         binary = binary.join("");
+        return binary;
+    };
+
+    var getCheckedCount = function(binaryString) {
+        var count = binaryString.split("").reduce(function(prev, bit){
+            console.log(bit);
+            if (bit === "1") return prev + 1;
+            return prev;
+        }, 0);
+        return count;
+    };
+
+    // Listen for click events on the form that contains checkboxes.
+    var handleCheck = function() {
+        var binary = getBinaryStringFromCheckboxes();
         selectSheets(binary);
 
         // Save to localStorage
@@ -214,6 +228,45 @@ function init() {
             }
         });
 
+    };
+
+
+    $("#bookmark").click(function(event) {
+        event.preventDefault();
+
+        var binary = getBinaryStringFromCheckboxes();
+        var h = binarytohex(binary);
+        var count = getCheckedCount(binary);
+        document.location.href = getUrlWithoutHash() + "#" + h;
+
+        $("#sheetCount").html(count);
+        enableEditing(false);
+    });
+
+    $("#edit").click(function(event) {
+        event.preventDefault();
+        document.location.href = getUrlWithoutHash();
+        enableEditing(true);
+    });
+
+    var getUrlWithoutHash = function() {
+        var url = location.href;
+        return url.split("#")[0];
+    };
+
+    var enableEditing = function(canEdit) {
+
+        editable = canEdit;
+
+        getCheckboxes().forEach(function(checkbox, idx){
+            checkbox.disabled = !editable;
+        });
+
+        if (canEdit) {
+            $("#mapsListDialog").removeClass("showBookmark");
+        } else {
+            $("#mapsListDialog").addClass("showBookmark");
+        }
     };
 
     // On Load, we check localStorage for data
