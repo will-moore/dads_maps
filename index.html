@@ -60,6 +60,17 @@
         display: block;
     }
 
+    .showReadonly .scrollableBody {
+        top: 200px;
+    }
+    .readonlyMessage {
+        display: none;
+    }
+    .showReadonly .readonlyMessage {
+        padding: 10px;
+        display: block;
+    }
+
 </style>
 
 </head>  
@@ -90,7 +101,23 @@
             <div class="alert alert-warning" role="alert">
                 You are viewing <span id="sheetCount">50</span> maps. You can bookmark the current url or share it!
                 <div style="margin-top: 10px">
-                    <button id="edit" type="button" class="btn btn-default">Back to editing</button>
+                    <button type="button" class="editAndSave btn btn-default">Back to editing</button>
+                </div>
+            </div>
+        </div>
+        <div class="readonlyMessage">
+            <div class="alert alert-warning" role="alert">
+                You are viewing <span class="newSheetCount"></span> maps. You can switch to Edit and Save,
+                or go back to your previous list.
+                <div style="margin-top: 10px">
+                    <button type="button" class="editAndSave btn btn-default"
+                        title="Edit this list and start auto-saving (will overwrite any previous list)">
+                        Edit & Save
+                    </button>
+                    <button type="button" class="backToStored btn btn-default"
+                        title="Return to your previously saved list">
+                        Back
+                    </button>
                 </div>
             </div>
         </div>
@@ -147,6 +174,34 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal" tabindex="-1" role="dialog" id="warningModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">Viewing a new list of maps</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+            You are viewing a new list of <span class="newSheetCount"></span> maps, defined by the current url.
+            The check list is not editable while in read-only mode.
+        </p>
+        <p>
+            You can subsequently close the new list and return to your previously saved check list or
+            switch to editing the new list. NB: If you swith to editing, this will automatically save for you and will
+            over-write any previously saved list of maps that you may have.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

@@ -191,7 +191,6 @@ function init() {
 
     var getCheckedCount = function(binaryString) {
         var count = binaryString.split("").reduce(function(prev, bit){
-            console.log(bit);
             if (bit === "1") return prev + 1;
             return prev;
         }, 0);
@@ -204,21 +203,25 @@ function init() {
         selectSheets(binary);
 
         // Save to localStorage
-        var h = binarytohex(binary);
-        localStorage.setItem('landranger', h);
-
-        // Validate that we can convert back to get same value
-        var b = hextobinary(h);
-        b = b.substr(0, binary.length);
-        if (b !== binary) {
-            console.log("Ooops! - BUG in converting to hex!");
-            console.log(binary);
-            console.log(b);
-        }
+        saveToLocalStorage(binary);
     };
     form.addEventListener("click", handleCheck, false);
 
 
+    var saveToLocalStorage = function(binaryString) {
+        var h = binarytohex(binaryString);
+        console.log("Saving: ", h);
+        localStorage.setItem('landranger', h);
+
+        // Validate that we can convert back to get same value
+        var b = hextobinary(h);
+        b = b.substr(0, binaryString.length);
+        if (b !== binaryString) {
+            console.log("Ooops! - BUG in converting to hex!");
+            console.log(binaryString);
+            console.log(b);
+        }
+    };
 
     var setCheckboxes = function setCheckboxes(binaryString) {
 
@@ -240,11 +243,24 @@ function init() {
         document.location.href = getUrlWithoutHash() + "#" + h;
 
         $("#sheetCount").html(count);
+        $("#mapsListDialog").addClass("showBookmark");
         enableEditing(false);
     });
 
-    $("#edit").click(function(event) {
+    $(".editAndSave").click(function(event) {
         event.preventDefault();
+
+        // Save to localStorage
+        var binary = getBinaryStringFromCheckboxes();
+        saveToLocalStorage(binary);
+
+        // Start editing (with no hash in url)
+        document.location.href = getUrlWithoutHash();
+        enableEditing(true);
+    });
+
+    $(".backToStored").click(function(event){
+        // Start editing (with no hash in url)
         document.location.href = getUrlWithoutHash();
         enableEditing(true);
     });
@@ -264,16 +280,31 @@ function init() {
 
         if (canEdit) {
             $("#mapsListDialog").removeClass("showBookmark");
-        } else {
-            $("#mapsListDialog").addClass("showBookmark");
         }
     };
 
-    // On Load, we check localStorage for data
-    var h = localStorage.getItem('landranger', h);
-    if (h) {
-        var b = hextobinary(h);
+
+    var loadFromHex = function(hex) {
+        var b = hextobinary(hex);
         setCheckboxes(b);
         selectSheets(b);
+    };
+
+    // Also check for any hash from url
+    var hash = location.href.split("#")[1];
+
+    if (hash) {
+        // Give warning about overwriting data set
+        $("#warningModal").modal("show");
+        $("#mapsListDialog").addClass("showReadonly");
+
+        loadFromHex(hash);
+        enableEditing(false);
+    } else {
+        // On Load, we check localStorage for data
+        var h = localStorage.getItem('landranger', h);
+        if (h) {
+            loadFromHex(h);
+        }
     }
   }
