@@ -237,6 +237,10 @@ function init() {
     $("#bookmark").click(function(event) {
         event.preventDefault();
 
+        if ($(".readonlyMessage").is(":visible")) {
+            return;
+        }
+
         var binary = getBinaryStringFromCheckboxes();
         var h = binarytohex(binary);
         var count = getCheckedCount(binary);
@@ -288,9 +292,10 @@ function init() {
         var b = hextobinary(hex);
         setCheckboxes(b);
         selectSheets(b);
+        return b;
     };
 
-    // Also check for any hash from url
+    // On Load, we check for any hash from url
     var hash = location.href.split("#")[1];
 
     if (hash) {
@@ -298,10 +303,12 @@ function init() {
         $("#warningModal").modal("show");
         $("#mapsListDialog").addClass("showReadonly");
 
-        loadFromHex(hash);
+        var binaryStr = loadFromHex(hash);
+        var newCount = getCheckedCount(binaryStr);
+        $(".newSheetCount").html(newCount);
         enableEditing(false);
     } else {
-        // On Load, we check localStorage for data
+        // Otherwise, we check localStorage for data
         var h = localStorage.getItem('landranger', h);
         if (h) {
             loadFromHex(h);
