@@ -4,6 +4,8 @@ var osMap;
 
 var editable;
 
+var STORAGE_KEY = "dads_maps";
+
 // This function creates the map and is called by the div in the HTML
 
 function init() {
@@ -203,15 +205,15 @@ function init() {
         selectSheets(binary);
 
         // Save to localStorage
-        saveToLocalStorage(binary);
+        setLocalStorage(binary);
     };
     form.addEventListener("click", handleCheck, false);
 
 
-    var saveToLocalStorage = function(binaryString) {
+    var setLocalStorage = function(binaryString) {
         var h = binarytohex(binaryString);
         console.log("Saving: ", h);
-        localStorage.setItem('landranger', h);
+        localStorage.setItem(STORAGE_KEY, h);
 
         // Validate that we can convert back to get same value
         var b = hextobinary(h);
@@ -223,14 +225,17 @@ function init() {
         }
     };
 
-    var setCheckboxes = function setCheckboxes(binaryString) {
+    var getLocalStorage = function() {
+        return localStorage.getItem(STORAGE_KEY, h);
+    };
 
+    var setCheckboxes = function(binaryString) {
+        // Non-jQuery selection of checkbox DOM elements
         getCheckboxes().forEach(function(checkbox, idx){
             if (binaryString[idx] === "1") {
                 checkbox.checked = true;
             }
         });
-
     };
 
 
@@ -256,7 +261,7 @@ function init() {
 
         // Save to localStorage
         var binary = getBinaryStringFromCheckboxes();
-        saveToLocalStorage(binary);
+        setLocalStorage(binary);
 
         // Start editing (with no hash in url)
         document.location.href = getUrlWithoutHash();
@@ -309,9 +314,9 @@ function init() {
         enableEditing(false);
     } else {
         // Otherwise, we check localStorage for data
-        var h = localStorage.getItem('landranger', h);
+        var h = getLocalStorage();
         if (h) {
             loadFromHex(h);
         }
     }
-  }
+}
