@@ -24,26 +24,57 @@ function init() {
         fillColor: "#ff00ff",
         fillOpacity: 0.3
     };
+
+
+    var options;
+    var vectorLayer;
+    var selectControl;
+    var sheets = [];
+
+    // define various functions...
+
+    // Draw rectangles - p is list of x, y, x2, y2
+    var drawRect = function(p, id) {
+      
+        var coords = [[p[0], p[1]],
+                    [p[2], p[1]],
+                    [p[2], p[3]],
+                    [p[0], p[3]] ];
+        var corners = coords.map(function(p){
+            return new OpenLayers.Geometry.Point(p[0], p[1]);
+        });
+        var linearRing = new OpenLayers.Geometry.LinearRing(corners);
+        var polygonFeature = new OpenLayers.Feature.Vector(linearRing, {'id': id}, baseStyle);
+
+        vectorLayer.addFeatures([polygonFeature]);
+        return polygonFeature;
+    };
+
     
-    // Create new map
-    var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
+
+    // Run the init() setup...
+    // Create new map...
+
+    options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
     osMap = new OpenSpace.Map('map', options);
     // Set map centre in National Grid Eastings and Northings and select zoom level 0
     osMap.setCenter(new OpenSpace.MapPoint(430000, 380000), 1);
     // Create a new vector layer to hold the polygon
-    var vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+    vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
 
-    // This works, but means that you can't drag the map around when over shapes
-    var selectControl = new OpenLayers.Control.SelectFeature(vectorLayer, {
-        multiple: true,
-        clickout: true,
-        toggle: true,
+    // This creates a 'selectControl' we can use later for setting a sheet as 'selected'
+    selectControl = new OpenLayers.Control.SelectFeature(vectorLayer, {
         selectStyle: selectStyle,
     });
     osMap.addControl(selectControl);
-
-    
     osMap.addLayer(vectorLayer);
+
+    // Draw all the sheets, adding them to vectorLayer. We add the features
+    // to a list for subsequent selection.
+    DATA.forEach(function(data){
+        var sheetFeature = drawRect(data.coords, data.id);
+        sheets.push(sheetFeature);
+    });
 
     // When we finished drag-move, update the selected
     // sheets (won't have been selected if off-screen)
@@ -52,9 +83,11 @@ function init() {
         selectSheets(binary);
     });
 
-
+    // Use jQuery to listen for events on map viewport, triggered by the map
     var mouseCoords = {};
     $(osMap.getViewport())
+    // When we move over a sheet, highlight the corresponding checkbox & name
+    // and focus the checkbox so that the list scrolls to show it.
     .on('mousemove', function(event) {
         var ft = vectorLayer.getFeatureFromEvent(event);
         if (ft) {
@@ -71,6 +104,8 @@ function init() {
         mouseCoords.x = event.clientX;
         mouseCoords.y = event.clientY;
     })
+    // If this is a real click (same location as mousedown) then we click()
+    // the corresponding checkbox to toggle sheet selection.
     .on('click', function(event) {
         if (event.clientX == mouseCoords.x && event.clientY == mouseCoords.y) {
             var ft = vectorLayer.getFeatureFromEvent(event);
@@ -80,33 +115,14 @@ function init() {
             }
         }
     });
-    
-    // Draw rectangles - p is list of 
-    var drawRect = function(p, id) {
-      
-        var coords = [[p[0], p[1]],
-                    [p[2], p[1]],
-                    [p[2], p[3]],
-                    [p[0], p[3]] ];
-        var corners = coords.map(function(p){
-            return new OpenLayers.Geometry.Point(p[0], p[1]);
-        });
-        var linearRing = new OpenLayers.Geometry.LinearRing(corners);
-        var polygonFeature = new OpenLayers.Feature.Vector(linearRing, {'id': id}, baseStyle);
 
-        vectorLayer.addFeatures([polygonFeature]);
-        return polygonFeature;
-    };
-    
-    var sheets = [];
-    DATA.forEach(function(data){
-        var sheetFeature = drawRect(data.coords, data.id);
-        sheets.push(sheetFeature);
-    });
-
-
+    // We build the checkbox list html from the sheet DATA
     var chkboxes = DATA.map(function(data){
-        return "<div class='checkbox'><label><input type='checkbox' data-id='" + data.id + "'>" + data.id + " " + data.name + "</label> </div>";
+        var chbxHtml = "" +
+        "<div class='checkbox'><label>" +
+            "<input type='checkbox' data-id='" + data.id + "'>" + data.id + " " + data.name +
+        "</label> </div>";
+        return chbxHtml;
     });
     var html = chkboxes.join("");
     var form = document.getElementById('mapsList');
