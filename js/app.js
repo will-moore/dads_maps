@@ -50,6 +50,144 @@ function init() {
         return polygonFeature;
     };
 
+    // select sheets with string "100010010..." etc
+    var selectSheets = function(binaryString) {
+        selectControl.unselectAll();
+        sheets.forEach(function(sheet, idx) {
+            if (binaryString[idx] === "1") {
+                selectControl.select(sheet);
+            }
+        });
+    };
+
+    // Returns a string of 6 hex characters from a number 0 - 16777215.
+    // E.g. 16777215 -> "ffffff"
+    // E.g. 2 -> "000002"  (adds padding)
+    var b2hex = function(b) {
+        // the 24-shifted bit gives us padding and is removed by substr
+        return ((1 << 24) + b).toString(16).substr(1);
+    };
+
+    var binarytohex = function(binary) {
+        binary = binary.split("").reverse().join("");
+        var chunk;
+        var hexes = [];
+        while (binary.length > 0) {
+            chunk = binary.substr(binary.length - 24);
+            binary = binary.substr(0, binary.length - 24);
+            var digit = parseInt(chunk, 2);
+            var hex = b2hex(digit);
+            hexes.push(hex);
+        }
+        hexes.reverse();
+        return hexes.join("");
+    };
+
+    // Returns a 24-length binary number with padding
+    // E.g. 5 -> "000000000000000000000101"
+    var dig2bin = function(digital) {
+        return (16777216 + digital).toString(2).substr(1);
+    };
+    var hextobinary = function(hex) {
+        var chunk, binary;
+        var binaries = [];
+        while (hex.length > 0) {
+            chunk = hex.substr(hex.length - 6);
+            hex = hex.substr(0, hex.length - 6);
+            binary = parseInt(chunk, 16);
+            binaries.push(dig2bin(binary));
+        }
+        binaries.reverse();
+        binary = binaries.join("");
+        binary = binary.split("").reverse().join("");
+        return binary;
+    };
+
+
+    var getCheckboxes = function() {
+        var checkboxes = [];
+        var inputs = document.getElementsByTagName("input");
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].type == "checkbox" && inputs[i].attributes['data-id']) {
+                checkboxes.push(inputs[i]);
+            }
+        }
+        return checkboxes;
+    };
+
+    var getBinaryStringFromCheckboxes = function() {
+        var checkboxes = getCheckboxes();
+        var binary = checkboxes.map(function(checkbox){
+            if (checkbox.checked) {
+                return "1";
+            }
+            return "0";
+        });
+        binary = binary.join("");
+        return binary;
+    };
+
+    var getCheckedCount = function(binaryString) {
+        var count = binaryString.split("").reduce(function(prev, bit){
+            if (bit === "1") return prev + 1;
+            return prev;
+        }, 0);
+        return count;
+    };
+
+    var setLocalStorage = function(binaryString) {
+        var h = binarytohex(binaryString);
+        console.log("Saving: ", h);
+        localStorage.setItem(STORAGE_KEY, h);
+
+        // Validate that we can convert back to get same value
+        var b = hextobinary(h);
+        b = b.substr(0, binaryString.length);
+        if (b !== binaryString) {
+            console.log("Ooops! - BUG in converting to hex!");
+            console.log(binaryString);
+            console.log(b);
+        }
+    };
+
+    var getLocalStorage = function() {
+        return localStorage.getItem(STORAGE_KEY, h);
+    };
+
+    var setCheckboxes = function(binaryString) {
+        // Non-jQuery selection of checkbox DOM elements
+        getCheckboxes().forEach(function(checkbox, idx){
+            if (binaryString[idx] === "1") {
+                checkbox.checked = true;
+            }
+        });
+    };
+
+    var getUrlWithoutHash = function() {
+        var url = location.href;
+        return url.split("#")[0];
+    };
+
+    var enableEditing = function(canEdit) {
+
+        editable = canEdit;
+
+        getCheckboxes().forEach(function(checkbox, idx){
+            checkbox.disabled = !editable;
+        });
+
+        if (canEdit) {
+            $("#mapsListDialog").removeClass("showBookmark");
+        }
+    };
+
+
+    var loadFromHex = function(hex) {
+        var b = hextobinary(hex);
+        setCheckboxes(b);
+        selectSheets(b);
+        return b;
+    };
     
 
     // Run the init() setup...
@@ -129,132 +267,17 @@ function init() {
     form.innerHTML = html;
 
 
-    // select sheets with string "100010010..." etc
-    var selectSheets = function(binaryString) {
-        selectControl.unselectAll();
-        sheets.forEach(function(sheet, idx) {
-            if (binaryString[idx] === "1") {
-                selectControl.select(sheet);
-            }
-        });
-    };
-
-
-    // Returns a string of 6 hex characters from a number 0 - 16777215.
-    // E.g. 16777215 -> "ffffff"
-    // E.g. 2 -> "000002"  (adds padding)
-    var b2hex = function(b) {
-        // the 24-shifted bit gives us padding and is removed by substr
-        return ((1 << 24) + b).toString(16).substr(1);
-    };
-
-    var binarytohex = function(binary) {
-        binary = binary.split("").reverse().join("");
-        var chunk;
-        var hexes = [];
-        while (binary.length > 0) {
-            chunk = binary.substr(binary.length - 24);
-            binary = binary.substr(0, binary.length - 24);
-            var digit = parseInt(chunk, 2);
-            var hex = b2hex(digit);
-            hexes.push(hex);
-        }
-        hexes.reverse();
-        return hexes.join("");
-    };
-
-    // Returns a 24-length binary number with padding
-    // E.g. 5 -> "000000000000000000000101"
-    var dig2bin = function(digital) {
-        return (16777216 + digital).toString(2).substr(1);
-    };
-    var hextobinary = function(hex) {
-        var chunk, binary;
-        var binaries = [];
-        while (hex.length > 0) {
-            chunk = hex.substr(hex.length - 6);
-            hex = hex.substr(0, hex.length - 6);
-            binary = parseInt(chunk, 16);
-            binaries.push(dig2bin(binary));
-        }
-        binaries.reverse();
-        binary = binaries.join("");
-        binary = binary.split("").reverse().join("");
-        return binary;
-    };
-
-
-    var getCheckboxes = function() {
-        var checkboxes = [];
-        var inputs = document.getElementsByTagName("input");
-        for (var i = 0; i < inputs.length; i++) {
-            if (inputs[i].type == "checkbox" && inputs[i].attributes['data-id']) {
-                checkboxes.push(inputs[i]);
-            }
-        }
-        return checkboxes;
-    };
-
-    var getBinaryStringFromCheckboxes = function() {
-        var checkboxes = getCheckboxes();
-        var binary = checkboxes.map(function(checkbox){
-            if (checkbox.checked) {
-                return "1";
-            }
-            return "0";
-        });
-        binary = binary.join("");
-        return binary;
-    };
-
-    var getCheckedCount = function(binaryString) {
-        var count = binaryString.split("").reduce(function(prev, bit){
-            if (bit === "1") return prev + 1;
-            return prev;
-        }, 0);
-        return count;
-    };
-
     // Listen for click events on the form that contains checkboxes.
-    var handleCheck = function() {
+    form.addEventListener("click", function() {
         var binary = getBinaryStringFromCheckboxes();
         selectSheets(binary);
 
         // Save to localStorage
         setLocalStorage(binary);
-    };
-    form.addEventListener("click", handleCheck, false);
+    }, false);
 
 
-    var setLocalStorage = function(binaryString) {
-        var h = binarytohex(binaryString);
-        console.log("Saving: ", h);
-        localStorage.setItem(STORAGE_KEY, h);
-
-        // Validate that we can convert back to get same value
-        var b = hextobinary(h);
-        b = b.substr(0, binaryString.length);
-        if (b !== binaryString) {
-            console.log("Ooops! - BUG in converting to hex!");
-            console.log(binaryString);
-            console.log(b);
-        }
-    };
-
-    var getLocalStorage = function() {
-        return localStorage.getItem(STORAGE_KEY, h);
-    };
-
-    var setCheckboxes = function(binaryString) {
-        // Non-jQuery selection of checkbox DOM elements
-        getCheckboxes().forEach(function(checkbox, idx){
-            if (binaryString[idx] === "1") {
-                checkbox.checked = true;
-            }
-        });
-    };
-
-
+    // Button for setting the hash as the url
     $("#bookmark").click(function(event) {
         event.preventDefault();
 
@@ -272,6 +295,7 @@ function init() {
         enableEditing(false);
     });
 
+    // 'Edit and Save' button shown when we're looking at list from url hash
     $(".editAndSave").click(function(event) {
         event.preventDefault();
 
@@ -289,32 +313,6 @@ function init() {
         document.location.href = getUrlWithoutHash();
         enableEditing(true);
     });
-
-    var getUrlWithoutHash = function() {
-        var url = location.href;
-        return url.split("#")[0];
-    };
-
-    var enableEditing = function(canEdit) {
-
-        editable = canEdit;
-
-        getCheckboxes().forEach(function(checkbox, idx){
-            checkbox.disabled = !editable;
-        });
-
-        if (canEdit) {
-            $("#mapsListDialog").removeClass("showBookmark");
-        }
-    };
-
-
-    var loadFromHex = function(hex) {
-        var b = hextobinary(hex);
-        setCheckboxes(b);
-        selectSheets(b);
-        return b;
-    };
 
     // On Load, we check for any hash from url
     var hash = location.href.split("#")[1];
