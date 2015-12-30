@@ -231,7 +231,8 @@ function init() {
         if (ft) {
             $("#mapsList .checkbox").css('background', '#fff');
             var mapId = ft.attributes.id;
-            $("#mapsList input[data-id='" + mapId + "']")
+            // we will only try to focus etc if list is showing (.showBody)
+            $(".showBody input[data-id='" + mapId + "']")
                 .focus()
                 .parent().parent().css('background', '#ddf');
         }
@@ -312,6 +313,11 @@ function init() {
         // Start editing (with no hash in url)
         document.location.href = getUrlWithoutHash();
         enableEditing(true);
+    });
+
+    $("#collapseList").click(function(event){
+        event.preventDefault();
+        $("#mapsListDialog").toggleClass("showBody");
     });
 
     // On Load, we check for any hash from url

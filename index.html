@@ -36,7 +36,6 @@
         top: -15px;
         width: 300px;
         z-index: 999;
-        bottom: -5px;
     }
     .scrollableBody {
         overflow-y: scroll;
@@ -45,8 +44,14 @@
         bottom: 0;
         padding-top: 0
     }
-    .badge {
+    #mapsListDialog h5 span {
         margin-left: 10px;
+    }
+
+    #collapseList span {
+        font-size: 18px;
+        top: -1px;
+        color: #aaa;
     }
 
     /* By adding the 'showBookmark' class, we reveal the .bookmarkMessage */
@@ -75,6 +80,10 @@
         display: block;
     }
 
+    .showBody {
+        bottom: -5px;
+    }
+
 </style>
 
 </head>  
@@ -86,11 +95,14 @@
 <div id="map"></div>
 
 <!-- Dialog on right with all sheets listed -->
-<div id="mapsListDialog" class="modal-dialog non-modal-dialog draggable-dialog ui-draggable">
+<div id="mapsListDialog" class="showBody modal-dialog non-modal-dialog draggable-dialog ui-draggable">
     <div class="modal-content" style="height: 100%; overflow: hidden">
         <div class="modal-header" style="height: 50px">
             <h5 class="modal-title">
                 Dad's maps
+                <a href="#" id="collapseList">
+                    <span class="glyphicon glyphicon-collapse-up pull-right" aria-hidden="true"></span>
+                </a>
                 <a id="about" href="#" data-toggle="modal" data-target="#aboutModal" title="Help & Info">
                     <span class="pull-right badge">about</span>
                 </a>
