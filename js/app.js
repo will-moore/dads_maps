@@ -196,64 +196,104 @@ function init() {
     options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
     osMap = new OpenSpace.Map('map', options);
     // Set map centre in National Grid Eastings and Northings and select zoom level 0
-    osMap.setCenter(new OpenSpace.MapPoint(430000, 380000), 1);
+    osMap.setCenter(new OpenSpace.MapPoint(600000, 321000), 7);
     // Create a new vector layer to hold the polygon
-    vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+    // vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
 
-    // This creates a 'selectControl' we can use later for setting a sheet as 'selected'
-    selectControl = new OpenLayers.Control.SelectFeature(vectorLayer, {
-        selectStyle: selectStyle,
-    });
-    osMap.addControl(selectControl);
-    osMap.addLayer(vectorLayer);
+    // // This creates a 'selectControl' we can use later for setting a sheet as 'selected'
+    // selectControl = new OpenLayers.Control.SelectFeature(vectorLayer, {
+    //     selectStyle: selectStyle,
+    // });
+    // osMap.addControl(selectControl);
+    // osMap.addLayer(vectorLayer);
 
-    // Draw all the sheets, adding them to vectorLayer. We add the features
-    // to a list for subsequent selection.
-    DATA.forEach(function(data){
-        var sheetFeature = drawRect(data.coords, data.id);
-        sheets.push(sheetFeature);
-    });
+    // // Add overlay of tiles...
+    // var mapOverlay = new OpenSpace.Layer.MapOverlay("logo");
+    
+    // mapOverlay.setHTML('<img src="https://www.ordnancesurvey.co.uk/module/home-banner/img/award.jpg" style="width: 100%; height: 100%;"/>');
+    
+    // mapOverlay.setPosition(new OpenSpace.MapPoint(600000, 321000));
+    
+    // mapOverlay.setSize(new OpenLayers.Size(1000, 1000));
+    // osMap.addLayer(mapOverlay);
 
-    // When we finished drag-move, update the selected
-    // sheets (won't have been selected if off-screen)
-    osMap.events.register('moveend', null, function(event){
-        var binary = getBinaryStringFromCheckboxes();
-        selectSheets(binary);
-    });
 
-    // Use jQuery to listen for events on map viewport, triggered by the map
-    var mouseCoords = {};
-    $(osMap.getViewport())
-    // When we move over a sheet, highlight the corresponding checkbox & name
-    // and focus the checkbox so that the list scrolls to show it.
-    .on('mousemove', function(event) {
-        var ft = vectorLayer.getFeatureFromEvent(event);
-        if (ft) {
-            $("#mapsList .checkbox").css('background', '#fff');
-            var mapId = ft.attributes.id;
-            // we will only try to focus etc if list is showing (.showBody)
-            $(".showBody input[data-id='" + mapId + "']")
-                .focus()
-                .parent().parent().css('background', '#ddf');
-        }
-    })
-    // We want to know if the 'click' is really a click or a drag-end,
-    // so we check if the location is same as mousedown.
-    .on('mousedown', function(event) {
-        mouseCoords.x = event.clientX;
-        mouseCoords.y = event.clientY;
-    })
-    // If this is a real click (same location as mousedown) then we click()
-    // the corresponding checkbox to toggle sheet selection.
-    .on('click', function(event) {
-        if (event.clientX == mouseCoords.x && event.clientY == mouseCoords.y) {
-            var ft = vectorLayer.getFeatureFromEvent(event);
-            if (ft) {
-                var mapId = ft.attributes.id;
-                $("#mapsList input[data-id='" + mapId + "']").click();
+    // // Draw all the sheets, adding them to vectorLayer. We add the features
+    // // to a list for subsequent selection.
+    // DATA.forEach(function(data){
+    //     var sheetFeature = drawRect(data.coords, data.id);
+    //     sheets.push(sheetFeature);
+    // });
+
+    // // When we finished drag-move, update the selected
+    // // sheets (won't have been selected if off-screen)
+    // osMap.events.register('moveend', null, function(event){
+    //     var binary = getBinaryStringFromCheckboxes();
+    //     selectSheets(binary);
+    // });
+
+    // // Use jQuery to listen for events on map viewport, triggered by the map
+    // var mouseCoords = {};
+    // $(osMap.getViewport())
+    // // When we move over a sheet, highlight the corresponding checkbox & name
+    // // and focus the checkbox so that the list scrolls to show it.
+    // .on('mousemove', function(event) {
+    //     var ft = vectorLayer.getFeatureFromEvent(event);
+    //     if (ft) {
+    //         $("#mapsList .checkbox").css('background', '#fff');
+    //         var mapId = ft.attributes.id;
+    //         // we will only try to focus etc if list is showing (.showBody)
+    //         $(".showBody input[data-id='" + mapId + "']")
+    //             .focus()
+    //             .parent().parent().css('background', '#ddf');
+    //     }
+    // });
+
+
+    window.overlayTiles = {};
+    // tiles key is "lon,lat"
+
+    // Define a clickcontrol to extend the OpenLayers.Control class.
+    // From https://www.ordnancesurvey.co.uk/business-and-government/help-and-support/web-services/os-openspace/tutorials/stijn-html-context-menu-on-map-click.html
+    var clickcontrol = new OpenLayers.Control();
+    OpenLayers.Util.extend(clickcontrol, {
+        // The draw method is called when the control is initialized
+        draw: function () {
+            // When mouse is clicked, we want to call the onClick method
+            this.clickhandler = new OpenLayers.Handler.Click(this, {"click": this.onClick});
+            this.clickhandler.activate();
+        },
+        onClick: function (event) {
+            // The mouse position is converted into a map position via the Map.getLonLatFromViewportPx(). This returns a point in the coordinate system of the map base layer, in our case this is British National Grid.
+            pt = osMap.getLonLatFromViewPortPx(event.xy);
+
+            // Tiles cover 2000 x 2000 so we need to get top-left coordinate
+            var long = pt.lon - (pt.lon % 2000);
+            var lat = pt.lat - (pt.lat % 2000);
+
+            var key = long + "," + lat;
+            var mapOverlay = overlayTiles[key];
+
+            // add layer if not already created
+            if (!mapOverlay) {
+                // Add overlay of tiles...
+                mapOverlay = new OpenSpace.Layer.MapOverlay(key);
+                mapOverlay.setHTML('<img src="http://res.cloudinary.com/dx97qkqq4/image/upload/' + long + '_' + lat + '.png" style="width: 100%; height: 100%;"/>');
+                mapOverlay.setPosition(new OpenSpace.MapPoint(long, lat));
+                mapOverlay.setSize(new OpenLayers.Size(2000, 2000));
+                osMap.addLayer(mapOverlay);
+
+                overlayTiles[key] = mapOverlay
+            } else {
+                // toggle visibility
+                mapOverlay.setVisibility(!mapOverlay.getVisibility());
             }
-        }
+        },
     });
+
+    // Add the clickcontrol to the map
+    osMap.addControl(clickcontrol);
+
 
     // We build the checkbox list html from the sheet DATA
     var chkboxes = DATA.map(function(data){
