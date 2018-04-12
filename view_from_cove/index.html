@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>View from Cove</title>
+<script>
+    var api_url = encodeURIComponent(document.URL);
+document.write("<scr"+"ipt src='https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6&v=4.0.0&debug=false&url="+api_url+"'></scri"+"pt>");
+</script>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+
+<script src="app.js"></script>
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    #map {
+        width: 100%;
+        height: calc(100% - 200px);
+        flex-grow: 1;
+    }
+
+    .image_frame {
+        width: 100%;
+        height: 200px;
+        flex-grow: 1;
+        padding-left: 50%;
+        overflow: hidden;
+    }
+
+    #scroll_container {
+        position: relative;
+        height: 100%;
+    }
+
+    #image_canvas {
+        position: absolute;
+        top: -150px;
+        left: -1000px;
+    }
+
+    #centre_line {
+        height: 100%;
+        border-left: solid red 1px;
+        position: absolute;
+        width: 1px;
+    }
+
+</style>
+
+</head>  
+  
+<body onload="init()">
+
+<div class="image_frame">
+    <div id="scroll_container">
+        <div id="image_canvas">
+            <img src="cove.png" />
+        </div>
+        <div id="centre_line"></div>
+    </div>
+</div>
+
+<!-- The div below holds the map -->
+<div id="map"></div>
+  
+</body>
+</html>
