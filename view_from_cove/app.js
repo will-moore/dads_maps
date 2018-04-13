@@ -20,8 +20,8 @@ function init() {
 
     var left_island_offset = -846;   // pixels
     var left_island_angle = 105;    // degrees
-    var triangulation_offset = -3501;
-    var triangulation_angle = 158;
+    var triangulation_offset = -2618;
+    var triangulation_angle = 140.9;
 
     var options;
     var vectorLayer;
