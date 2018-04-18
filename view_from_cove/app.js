@@ -16,7 +16,7 @@ var hills = [
     {name: "Beinn Dearg Mor", height: 906, lon: 203211.86353608, lat: 879935.19828485},
     {name: "A' Mhaighdean", height: 967, lon: 200776.84972172, lat: 874892.68293556},
     {name: "Slioch", height: 980, lon: 200496.86796237, lat: 868874.02056833},
-    {name: "Meall Mheinnidh", height: 722, lon: 195484.83281297, lat: 874848.31605644},
+    {name: "Meall Mheinnidh", height: 722, lon: 195484.83281297, lat: 874848.31605644, className:'left'},
     {name: "Beinn Airigh Charr", height: 792, lon: 193029.83281297, lat: 876178.31605644},
     {name: "Meall a' Ghiuthais", height: 887, lon: 197609.83281297, lat: 863428.31605644},
     {name: "Ruadh-stac Mor", height: 1010, lon: 195141.56998945, lat: 861154.90166647},
@@ -178,7 +178,13 @@ function init() {
     // Add labels to horizon image
     var html = hills.map(function(hill, index){
         var offset = -degreesToOffset(pointToDegrees(hill));
-        return "<a data-index='" + index + "' href='#' class='hill_label' style='left:" + offset + "px'>" + hill.name + "</a>";
+        var style = "left:" + offset + "px";
+        var className = "hill_label";
+        if (hill.className === 'left') {
+            style = "right: calc(100% - " + offset + "px)";
+            className += " " + hill.className;
+        }
+        return "<a data-index='" + index + "' href='#' class='" + className + "' style='" + style + "'>" + hill.name + "</a>";
     }).join("");
     console.log(html);
     document.getElementById("image_canvas").insertAdjacentHTML("beforeend", html);
