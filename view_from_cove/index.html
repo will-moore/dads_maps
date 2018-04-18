@@ -23,7 +23,7 @@ document.write("<scr"+"ipt src='https://openspace.ordnancesurvey.co.uk/osmapapi/
     }
 
     #image_frame {
-        height: 200px;
+        height: 210px;
         flex-grow: 1;
         padding-left: 50%;
         overflow: hidden;
@@ -37,23 +37,24 @@ document.write("<scr"+"ipt src='https://openspace.ordnancesurvey.co.uk/osmapapi/
 
     #image_canvas {
         position: absolute;
-        top: -150px;
+        top: -140px;
         left: -1000px;
     }
 
     #centre_line {
         height: 100%;
-        border-left: solid red 1px;
+        border-left: solid #ff00ff 1px;
         position: absolute;
         width: 1px;
     }
 
     .hill_label {
         position: absolute;
-        top: 155px;
+        top: 140px;
         font-family: sans-serif;
         padding: 5px;
         display: block;
+        font-size: 15px;
     }
 
     .hill_label::before {
@@ -65,6 +66,9 @@ document.write("<scr"+"ipt src='https://openspace.ordnancesurvey.co.uk/osmapapi/
         position: absolute;
         left: -1px;
         top: -2px;
+    }
+    .left {
+        text-align: right;
     }
     .left::before {
         left: auto;

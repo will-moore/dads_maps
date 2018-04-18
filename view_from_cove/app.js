@@ -21,18 +21,21 @@ var hills = [
     {name: "Meall a' Ghiuthais", height: 887, lon: 197609.83281297, lat: 863428.31605644},
     {name: "Ruadh-stac Mor", height: 1010, lon: 195141.56998945, lat: 861154.90166647},
     {name: "Sail Mhor (Beinn Eighe)", height: 980, lon: 193816.56998945, lat: 860584.90166647},
+    {name: "Baosbheinn", height: 875, lon: 187061.56998945, lat: 865404.86400621},
+    {name: "Sgurr Mor (Beinn Alligin)", height: 986, lon: 186556.61120169, lat: 861280.93552449},
 ]
 
+var pointToDistance = function(map_point) {
+    var dx = map_point.lon - COVE_LONG;
+    var dy = map_point.lat - COVE_LAT;
+    return Math.sqrt((dx * dx) + (dy * dy));
+} 
 
 var pointToDegrees = function(map_point) {
     var dx = map_point.lon - COVE_LONG;
     var dy = map_point.lat - COVE_LAT;
-    
-    var distance = Math.sqrt((dx * dx) + (dy * dy));
-    console.log('distance', distance);
     return Math.atan2(dx, dy) * 180 / Math.PI;
 };
-
 
 var degreesToPoint = function(degrees) {
     // pick some distance, then calculate x and y
@@ -40,13 +43,10 @@ var degreesToPoint = function(degrees) {
     var radians = degrees * Math.PI / 180;
     var dx = Math.sin(radians) * drid_distance;
     var dy = Math.cos(radians) * drid_distance;
-    console.log('dx, dy', dx, dy);
-
     var map_point = {lon: COVE_LONG + dx,
                      lat: COVE_LAT + dy};
     return map_point;
 }
-
 
 var offsetToDegrees = function(offset) {
     // Pixels offset on horizon to compass bearing from Cove
@@ -65,9 +65,7 @@ var degreesToOffset = function(degrees) {
 }
 
 var offsetHorizon = function(degrees) {
-
     var offset = degreesToOffset(degrees);
-    console.log("OFFSET", offset);
     document.getElementById("image_canvas").style.left = offset + 'px';
     document.getElementById("scroll_container").style.left = '0px';
 }
@@ -178,15 +176,17 @@ function init() {
     // Add labels to horizon image
     var html = hills.map(function(hill, index){
         var offset = -degreesToOffset(pointToDegrees(hill));
+        var distance = pointToDistance(hill) / 1000;   // km
+        var miles = Math.round(0.621371 * distance);
         var style = "left:" + offset + "px";
         var className = "hill_label";
         if (hill.className === 'left') {
             style = "right: calc(100% - " + offset + "px)";
             className += " " + hill.className;
         }
-        return "<a data-index='" + index + "' href='#' class='" + className + "' style='" + style + "'>" + hill.name + "</a>";
+        var label = hill.name + "<br/>" + hill.height + " m<br/>" + miles + " miles";
+        return "<a data-index='" + index + "' href='#' class='" + className + "' style='" + style + "'>" + label + "</a>";
     }).join("");
-    console.log(html);
     document.getElementById("image_canvas").insertAdjacentHTML("beforeend", html);
 }
 
