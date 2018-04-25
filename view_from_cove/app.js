@@ -5,8 +5,8 @@ var osMap;
 var COVE_LONG = 180964;
 var COVE_LAT = 891029;
 
-var left_island_offset = -846;   // pixels
-var left_island_angle = 105;    // degrees
+var left_island_offset = -892;   // pixels
+var left_island_angle = 106.1;    // degrees
 var triangulation_offset = -2618;
 var triangulation_angle = 140.9;
 
