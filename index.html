@@ -1,233 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<meta charset="utf-8">
-<title>Dad's maps</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OS Maps API | Basic Map ZXY (EPSG:27700) | OpenLayers</title>
+    <link rel="stylesheet" href="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.css" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
 
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
 
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<body>
 
-<!-- Optional theme -->
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous"> -->
+    <div id="map"></div>
 
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.0/proj4.js"></script>
+    <script>
 
-<!-- 
-<script src="https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6"></script>
- -->
-<script>
-    var api_url = encodeURIComponent(document.URL);
-document.write("<scr"+"ipt src='https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6&v=4.0.0&debug=false&url="+api_url+"'></scri"+"pt>");
-</script>
-<script src="js/coords.js"></script>
-<script src="js/app.js"></script>
+        var apiKey = 'YNN0DjzxNl9qWGu35kv7BkqRCqSmtsVz';
 
-<style>
-    html, body {
-        height: 100%;
-        margin: 0;
-    }
-    #map {
-        width: 100%;
-        height: 100%;
-        background: white;   
-    }
-    .non-modal-dialog {
-        position: absolute;
-        right: 15px;
-        top: -15px;
-        width: 300px;
-        z-index: 999;
-    }
-    .scrollableBody {
-        overflow-y: scroll;
-        position: absolute;
-        top: 50px;
-        bottom: 0;
-        padding-top: 0
-    }
-    #mapsListDialog h5 span {
-        margin-left: 10px;
-    }
+        var serviceUrl = 'https://api.os.uk/maps/raster/v1/zxy';
 
-    #collapseList span {
-        font-size: 18px;
-        top: -1px;
-        color: #aaa;
-    }
+        // Setup the EPSG:27700 (British National Grid) projection.
+        proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
+        ol.proj.proj4.register(proj4);
 
-    /* By adding the 'showBookmark' class, we reveal the .bookmarkMessage */
-    /* AND we shift down the .scrollableBody to make space for it */
-    .showBookmark .scrollableBody {
-        top: 177px;
-    }
-    .bookmarkMessage {
-        display: none;
-    }
-    .showBookmark .bookmarkMessage {
-        padding: 10px;
-        display: block;
-    }
+        var tilegrid = new ol.tilegrid.TileGrid({
+            resolutions: [896.0, 448.0, 224.0, 112.0, 56.0, 28.0, 14.0, 7.0, 3.5, 1.75],
+            origin: [-238375.0, 1376256.0]
+        });
 
-    /* By adding the 'showReadonly' class, we reveal the .readonlyMessage */
-    /* AND we shift down the .scrollableBody to make space for it */
-    .showReadonly .scrollableBody {
-        top: 200px;
-    }
-    .readonlyMessage {
-        display: none;
-    }
-    .showReadonly .readonlyMessage {
-        padding: 10px;
-        display: block;
-    }
+        // Initialize the map object.
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        url: serviceUrl + '/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey,
+                        projection: 'EPSG:27700',
+                        tileGrid: tilegrid
+                    })
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                projection: 'EPSG:27700',
+                extent: [-238375.0, 0.0, 900000.0, 1376256.0],
+                resolutions: tilegrid.getResolutions(),
+                minZoom: 0,
+                maxZoom: 9,
+                center: [337297, 503695],
+                zoom: 7
+            })
+        });
 
-    .showBody {
-        bottom: -5px;
-    }
+    </script>
 
-</style>
-
-</head>  
-  
-<body onload="init()">
-  
-<!-- The div below holds the map -->
-  
-<div id="map"></div>
-
-<!-- Dialog on right with all sheets listed -->
-<div id="mapsListDialog" class="showBody modal-dialog non-modal-dialog draggable-dialog ui-draggable">
-    <div class="modal-content" style="height: 100%; overflow: hidden">
-        <div class="modal-header" style="height: 50px">
-            <h5 class="modal-title">
-                Dad's maps
-                <a href="#" id="collapseList">
-                    <span class="glyphicon glyphicon-collapse-up pull-right" aria-hidden="true"></span>
-                </a>
-                <a id="about" href="#" data-toggle="modal" data-target="#aboutModal" title="Help & Info">
-                    <span class="pull-right badge">about</span>
-                </a>
-                <a id="bookmark" href="#" title="Bookmark currently selected maps">
-                    <span class="pull-right badge">
-                        bookmark
-                    </span>
-                </a>
-            </h5>
-        </div>
-        <div class="bookmarkMessage">
-            <div class="alert alert-warning" role="alert">
-                You are viewing <span id="sheetCount">50</span> maps. You can bookmark the current url or share it!
-                <div style="margin-top: 10px">
-                    <button type="button" class="editAndSave btn btn-default">Back to editing</button>
-                </div>
-            </div>
-        </div>
-        <div class="readonlyMessage">
-            <div class="alert alert-warning" role="alert">
-                You are viewing <span class="newSheetCount"></span> maps. You can switch to Edit and Save,
-                or go back to your previous list.
-                <div style="margin-top: 10px">
-                    <button type="button" class="editAndSave btn btn-default"
-                        title="Edit this list and start auto-saving (will overwrite any previous list)">
-                        Edit & Save
-                    </button>
-                    <button type="button" class="backToStored btn btn-default"
-                        title="Return to your previously saved list">
-                        Back
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="modal-body scrollableBody">
-            <form id="mapsList">
-                <!-- sheets listed here -->
-            </form>
-        </div>
-    </div><!-- /.modal-content -->
-</div>
-
-
-<div class="modal" tabindex="-1" role="dialog" id="aboutModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">About "Dad's maps"</h4>
-      </div>
-      <div class="modal-body">
-        <p>
-            This is a simple tool for keeping track of the Ordnance Survey Landranger maps that you own,
-            and showing the coverage of them across the UK. <br>
-            The checked maps are automatically saved in the browser on your device, even when you close the window,
-            so you don't need to save as you go.
-        </p>
-        <p>
-            The idea for this came from a recent visit home, when my Dad was trying to sort his maps, together with
-            me hearing about the availability of
-            <a href="https://www.ordnancesurvey.co.uk/business-and-government/products/opendata-products.html">
-                Ordnance Survey Open Data</a>.
-        </p>
-        <p>
-            I found that the Landranger sheet names and coordinates are not publicly available but after
-            <a href="https://www.ordnancesurvey.co.uk/forums/discussion/comment/1013441/">
-                asking for the data on their forums</a>,
-            the Ordnance Survey team eventually prepared and sent me a spreadsheet of
-            everything I needed! So thank you very much to them!
-        </p>
-        <p>
-            Then it was just a case of using the OS
-            <a href="https://www.ordnancesurvey.co.uk/business-and-government/products/os-openspace/api/index.html">
-                Open Space API
-            </a> to build this app, which you can <a href="https://github.com/will-moore/dads_maps">
-            find on github</a>.
-        </p>
-        <p>
-            Enjoy it!
-        </p>
-        <p>
-            Any feedback etc please contact me at <a href="https://twitter.com/will_j_moore">@will_j_moore</a>
-        </p>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-
-<div class="modal" tabindex="-1" role="dialog" id="warningModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title">Viewing a new list of maps</h4>
-      </div>
-      <div class="modal-body">
-        <p>
-            You are viewing a new list of <span class="newSheetCount"></span> maps, defined by the current url.
-            The check list is not editable while in read-only mode.
-        </p>
-        <p>
-            You can subsequently close the new list and return to your previously saved check list or
-            switch to editing the new list. NB: If you swith to editing, this will automatically save for you and will
-            over-write any previously saved list of maps that you may have.
-        </p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-  
 </body>
+
 </html>
