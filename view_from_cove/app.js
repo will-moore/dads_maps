@@ -76,13 +76,15 @@ function init() {
 
     "use strict"
 
-    var lineStyle ={
-        strokeColor: "#ff00ff",
-        strokeOpacity: 1,
-        strokeWidth: 2,
-        fillColor: "#ff00ff",
-        fillOpacity: 0
-    };
+    var lineStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: [255, 0, 255, 1],
+            width: 20
+        }),
+        fill: new ol.style.Fill({
+            color: [0, 255, 0, 1]
+        })
+    });
 
     var options;
     var vectorLayer;
@@ -90,24 +92,76 @@ function init() {
     // Run the init() setup...
     // Create new map...
 
-    options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
-    osMap = new OpenSpace.Map('map', options);
-    // Set map centre in National Grid Eastings and Northings and select zoom level 0
-    osMap.setCenter(new OpenSpace.MapPoint(COVE_LONG, COVE_LAT), 7);
+    // options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
+    // osMap = new OpenSpace.Map('map', options);
+
+    var apiKey = 'YNN0DjzxNl9qWGu35kv7BkqRCqSmtsVz';
+
+    var serviceUrl = 'https://api.os.uk/maps/raster/v1/zxy';
+
+    // Setup the EPSG:27700 (British National Grid) projection.
+    proj4.defs("EPSG:27700", "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs");
+    ol.proj.proj4.register(proj4);
+
+    var tilegrid = new ol.tilegrid.TileGrid({
+        resolutions: [896.0, 448.0, 224.0, 112.0, 56.0, 28.0, 14.0, 7.0, 3.5, 1.75],
+        origin: [-238375.0, 1376256.0]
+    });
+
+    // Initialize the map object.
+    var osMap = new ol.Map({
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: serviceUrl + '/Leisure_27700/{z}/{x}/{y}.png?key=' + apiKey,
+                    projection: 'EPSG:27700',
+                    tileGrid: tilegrid
+                })
+            })
+        ],
+        target: 'map',
+        view: new ol.View({
+            projection: 'EPSG:27700',
+            extent: [-238375.0, 0.0, 900000.0, 1376256.0],
+            resolutions: tilegrid.getResolutions(),
+            minZoom: 0,
+            maxZoom: 9,
+            center: [COVE_LONG, COVE_LAT],
+            zoom: 6
+        })
+    });
+
+    // Test add Line...
+    var cove = new ol.geom.Point(COVE_LONG, COVE_LAT);
+    var point = new ol.geom.Point(COVE_LONG + 10000, COVE_LAT + 10000);
+    var linearRing = new ol.geom.LinearRing([cove, point]);
+    var polygonFeature = new ol.Feature();
+    polygonFeature.setGeometry(linearRing);
+    polygonFeature.setStyle(lineStyle);
+
+    var features = new ol.Collection([polygonFeature]);
+
     // Create a new vector layer
-    vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+    var vectorSource = new ol.source.Vector({
+        features: features
+    });
+    // vectorLayer = new ol.layer.Vector("Vector Layer");
+    vectorLayer = new ol.layer.Vector({source: vectorSource});
     osMap.addLayer(vectorLayer);
-    
+
 
     var drawLineFromCoveToPoint = function(map_point) {
-      
-        var cove = new OpenLayers.Geometry.Point(COVE_LONG, COVE_LAT);
-        var point = new OpenLayers.Geometry.Point(map_point.lon, map_point.lat);
-        var linearRing = new OpenLayers.Geometry.LinearRing([cove, point]);
-        var polygonFeature = new OpenLayers.Feature.Vector(linearRing, {}, lineStyle);
 
-        vectorLayer.removeAllFeatures();
-        vectorLayer.addFeatures([polygonFeature]);
+        var cove = new ol.geom.Point(COVE_LONG, COVE_LAT);
+        var point = new ol.geom.Point(map_point.lon, map_point.lat);
+        var linearRing = new ol.geom.LinearRing([cove, point]);
+        var polygonFeature = new ol.Feature();
+        polygonFeature.setGeometry(linearRing);
+
+        // var polygonFeature = new OpenLayers.Feature.Vector(linearRing, {}, lineStyle);
+
+        // vectorLayer.removeAllFeatures();
+        vectorLayer.getSource().addFeature(polygonFeature);
         return polygonFeature;
     };
 
@@ -151,27 +205,27 @@ function init() {
 
     // Define a clickcontrol to extend the OpenLayers.Control class.
     // From https://www.ordnancesurvey.co.uk/business-and-government/help-and-support/web-services/os-openspace/tutorials/stijn-html-context-menu-on-map-click.html
-    var clickcontrol = new OpenLayers.Control();
-    OpenLayers.Util.extend(clickcontrol, {
-        // The draw method is called when the control is initialized
-        draw: function () {
-            // When mouse is clicked, we want to call the onClick method
-            this.clickhandler = new OpenLayers.Handler.Click(this, {"click": this.onClick});
-            this.clickhandler.activate();
-        },
-        onClick: function (event) {
-            // The mouse position is converted into a map position via the Map.getLonLatFromViewportPx(). This returns a point in the coordinate system of the map base layer, in our case this is British National Grid.
-            var pt = osMap.getLonLatFromViewPortPx(event.xy);
-            console.log('click', pt);
-            drawLineFromCoveToPoint(pt);
-            var degrees = pointToDegrees(pt);
-            console.log('DEGREES', degrees);
-            offsetHorizon(degrees);
-        },
-    });
+    // var clickcontrol = new OpenLayers.Control();
+    // OpenLayers.Util.extend(clickcontrol, {
+    //     // The draw method is called when the control is initialized
+    //     draw: function () {
+    //         // When mouse is clicked, we want to call the onClick method
+    //         this.clickhandler = new OpenLayers.Handler.Click(this, {"click": this.onClick});
+    //         this.clickhandler.activate();
+    //     },
+    //     onClick: function (event) {
+    //         // The mouse position is converted into a map position via the Map.getLonLatFromViewportPx(). This returns a point in the coordinate system of the map base layer, in our case this is British National Grid.
+    //         var pt = osMap.getLonLatFromViewPortPx(event.xy);
+    //         console.log('click', pt);
+    //         drawLineFromCoveToPoint(pt);
+    //         var degrees = pointToDegrees(pt);
+    //         console.log('DEGREES', degrees);
+    //         offsetHorizon(degrees);
+    //     },
+    // });
 
     // Add the clickcontrol to the map
-    osMap.addControl(clickcontrol);
+    // osMap.addControl(clickcontrol);
 
     // Add labels to horizon image
     var html = hills.map(function(hill, index){

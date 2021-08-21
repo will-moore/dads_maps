@@ -3,10 +3,13 @@
 <head>
 <meta charset="utf-8">
 <title>View from Cove</title>
-<script>
-    var api_url = encodeURIComponent(document.URL);
-document.write("<scr"+"ipt src='https://openspace.ordnancesurvey.co.uk/osmapapi/openspace.js?key=264BA109582B0BB3E0530B6CA40A9FE6&v=4.0.0&debug=false&url="+api_url+"'></scri"+"pt>");
-</script>
+<link rel="stylesheet" href="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" />
+
+<script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.0/proj4.js"></script>
+
 <script src="app.js"></script>
 
 <style>
