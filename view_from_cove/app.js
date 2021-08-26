@@ -76,24 +76,10 @@ function init() {
 
     "use strict"
 
-    var lineStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: [255, 0, 255, 1],
-            width: 20
-        }),
-        fill: new ol.style.Fill({
-            color: [0, 255, 0, 1]
-        })
-    });
-
-    var options;
     var vectorLayer;
 
     // Run the init() setup...
     // Create new map...
-
-    // options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5]};
-    // osMap = new OpenSpace.Map('map', options);
 
     var apiKey = 'YNN0DjzxNl9qWGu35kv7BkqRCqSmtsVz';
 
@@ -131,36 +117,28 @@ function init() {
         })
     });
 
-    // Test add Line...
-    var cove = new ol.geom.Point(COVE_LONG, COVE_LAT);
-    var point = new ol.geom.Point(COVE_LONG + 10000, COVE_LAT + 10000);
-    var linearRing = new ol.geom.LinearRing([cove, point]);
-    var polygonFeature = new ol.Feature();
-    polygonFeature.setGeometry(linearRing);
-    polygonFeature.setStyle(lineStyle);
-
-    var features = new ol.Collection([polygonFeature]);
-
-    // Create a new vector layer
-    var vectorSource = new ol.source.Vector({
-        features: features
+    // Add Vector layer for the sight-line
+    vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#f0f',
+                width: 2
+            })
+        })
     });
-    // vectorLayer = new ol.layer.Vector("Vector Layer");
-    vectorLayer = new ol.layer.Vector({source: vectorSource});
     osMap.addLayer(vectorLayer);
 
 
     var drawLineFromCoveToPoint = function(map_point) {
-
-        var cove = new ol.geom.Point(COVE_LONG, COVE_LAT);
-        var point = new ol.geom.Point(map_point.lon, map_point.lat);
-        var linearRing = new ol.geom.LinearRing([cove, point]);
-        var polygonFeature = new ol.Feature();
-        polygonFeature.setGeometry(linearRing);
-
-        // var polygonFeature = new OpenLayers.Feature.Vector(linearRing, {}, lineStyle);
-
-        // vectorLayer.removeAllFeatures();
+        var polygonFeature = new ol.Feature({
+            id: 'line',
+            geometry: new ol.geom.LineString([
+                [COVE_LONG, COVE_LAT],
+                [map_point.lon, map_point.lat]
+            ])
+        })
+        vectorLayer.getSource().clear();
         vectorLayer.getSource().addFeature(polygonFeature);
         return polygonFeature;
     };
@@ -192,10 +170,9 @@ function init() {
             var hill = hills[hill_index];
             drawLineFromCoveToPoint(hill);
             offsetHorizon(pointToDegrees(hill));
-            osMap.setCenter(new OpenSpace.MapPoint(hill.lon, hill.lat));
+            osMap.getView().setCenter([hill.lon, hill.lat]);
             return false;
         }
-        // var click_left = event.offsetX 
         var degrees = offsetToDegrees(-event.offsetX);
         console.log('degrees', degrees);
         var pt = degreesToPoint(degrees);
@@ -203,29 +180,14 @@ function init() {
         offsetHorizon(degrees);
     }, false);
 
-    // Define a clickcontrol to extend the OpenLayers.Control class.
-    // From https://www.ordnancesurvey.co.uk/business-and-government/help-and-support/web-services/os-openspace/tutorials/stijn-html-context-menu-on-map-click.html
-    // var clickcontrol = new OpenLayers.Control();
-    // OpenLayers.Util.extend(clickcontrol, {
-    //     // The draw method is called when the control is initialized
-    //     draw: function () {
-    //         // When mouse is clicked, we want to call the onClick method
-    //         this.clickhandler = new OpenLayers.Handler.Click(this, {"click": this.onClick});
-    //         this.clickhandler.activate();
-    //     },
-    //     onClick: function (event) {
-    //         // The mouse position is converted into a map position via the Map.getLonLatFromViewportPx(). This returns a point in the coordinate system of the map base layer, in our case this is British National Grid.
-    //         var pt = osMap.getLonLatFromViewPortPx(event.xy);
-    //         console.log('click', pt);
-    //         drawLineFromCoveToPoint(pt);
-    //         var degrees = pointToDegrees(pt);
-    //         console.log('DEGREES', degrees);
-    //         offsetHorizon(degrees);
-    //     },
-    // });
-
-    // Add the clickcontrol to the map
-    // osMap.addControl(clickcontrol);
+    osMap.on("click", function(event){
+        var coord = event.coordinate;
+        var pt = { lon: coord[0], lat: coord[1]}
+        drawLineFromCoveToPoint(pt);
+        var degrees = pointToDegrees(pt);
+        console.log('DEGREES', degrees);
+        offsetHorizon(degrees);
+    })
 
     // Add labels to horizon image
     var html = hills.map(function(hill, index){
