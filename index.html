@@ -30,6 +30,7 @@
     <script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.0/proj4.js"></script>
+    <script src="./js/coords.js"></script>
     <script>
 
         var apiKey = 'YNN0DjzxNl9qWGu35kv7BkqRCqSmtsVz';
@@ -66,6 +67,51 @@
                 center: [437297, 503695],
                 zoom: 0
             })
+        });
+
+        // Add Vector layer for the sight-line
+        vectorLayer = new ol.layer.Vector({
+            source: new ol.source.Vector(),
+            style: new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#f0f',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 255, 0.1)'
+                })
+            })
+        });
+        map.addLayer(vectorLayer);
+
+
+        var drawLine = function (map_point, id) {
+            var polygonFeature = new ol.Feature({
+                id: id,
+                geometry: new ol.geom.LineString([
+                    [map_point[0], map_point[1]],
+                    [map_point[2], map_point[3]]
+                ])
+            })
+            vectorLayer.getSource().addFeature(polygonFeature);
+            return polygonFeature;
+        };
+
+        var drawRect = function (points, id) {
+
+            let x1 = parseInt(points[0]);
+            let y1 = parseInt(points[1]);
+            let x2 = parseInt(points[2]);
+            let y2 = parseInt(points[3]);
+
+            drawLine([x1, y1, x1, y2], id);
+            drawLine([x1, y2, x2, y2], id);
+            drawLine([x2, y2, x2, y1], id);
+            drawLine([x2, y1, x1, y1], id);
+        };
+
+        DATA.forEach(element => {
+            drawRect(element.coords, element.id);
         });
 
     </script>
