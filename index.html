@@ -141,6 +141,7 @@
 
       // Handle location from browser...
       function locationCallback(position) {
+        btn.style.backgroundColor = 'white';
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
         const wgs84 = new LatLon(latitude, longitude);
@@ -173,10 +174,10 @@
       }
 
       // Click to centre map on current location...
-      document
-        .getElementById("centreMap")
-        .addEventListener("click", function () {
+      let btn = document.getElementById("centreMap");
+      btn.addEventListener("click", function () {
           console.log("Locating…");
+          btn.style.backgroundColor = 'red';
           navigator.geolocation.getCurrentPosition(
             locationCallback,
             function () {
