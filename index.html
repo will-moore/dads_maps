@@ -54,9 +54,8 @@
 
       var serviceUrl = "https://api.os.uk/maps/raster/v1/zxy";
 
-      import OsGridRef, {
-        LatLon,
-      } from "https://cdn.jsdelivr.net/npm/geodesy@2/osgridref.js";
+      // https://www.movable-type.co.uk/scripts/latlong-os-gridref.html
+      import { LatLon } from "https://cdn.jsdelivr.net/npm/geodesy@2/osgridref.js";
 
       // Setup the EPSG:27700 (British National Grid) projection.
       proj4.defs(
@@ -104,23 +103,12 @@
             width: 2,
           }),
           fill: new ol.style.Fill({
-            color: "rgba(0, 0, 255, 0.1)",
+            color: "rgba(255, 0, 255, 0)",
           }),
         }),
       });
       map.addLayer(vectorLayer);
 
-      var drawLine = function (map_point, id) {
-        var polygonFeature = new ol.Feature({
-          id: id,
-          geometry: new ol.geom.LineString([
-            [map_point[0], map_point[1]],
-            [map_point[2], map_point[3]],
-          ]),
-        });
-        vectorLayer.getSource().addFeature(polygonFeature);
-        return polygonFeature;
-      };
 
       var drawRect = function (points, id) {
         let x1 = parseInt(points[0]);
@@ -128,20 +116,22 @@
         let x2 = parseInt(points[2]);
         let y2 = parseInt(points[3]);
 
-        drawLine([x1, y1, x1, y2], id);
-        drawLine([x1, y2, x2, y2], id);
-        drawLine([x2, y2, x2, y1], id);
-        drawLine([x2, y1, x1, y1], id);
+        var polygonFeature = new ol.Feature({
+          id: id,
+          geometry: new ol.geom.Polygon([
+            [[x1, y1], [x1, y2], [x2, y2], [x2, y1]]
+          ]),
+        });
+        vectorLayer.getSource().addFeature(polygonFeature);
+        return polygonFeature;
       };
 
       DATA.forEach((element) => {
         drawRect(element.coords, element.id);
       });
 
-
       // Handle location from browser...
       function locationCallback(position) {
-        btn.style.backgroundColor = 'white';
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
         const wgs84 = new LatLon(latitude, longitude);
@@ -167,7 +157,6 @@
         vectorLayer.getSource().addFeature(iconFeature);
       }
 
-
       if (!navigator.geolocation) {
         console.log("Geolocation is not supported by your browser");
         document.getElementById("centreMap").style.visibility = "hidden";
@@ -176,15 +165,11 @@
       // Click to centre map on current location...
       let btn = document.getElementById("centreMap");
       btn.addEventListener("click", function () {
-          console.log("Locating…");
-          btn.style.backgroundColor = 'red';
-          navigator.geolocation.getCurrentPosition(
-            locationCallback,
-            function () {
-              console.log("Error getting location");
-            }
-          );
+        console.log("Locating…");
+        navigator.geolocation.getCurrentPosition(locationCallback, function () {
+          console.log("Error getting location");
         });
+      });
     </script>
   </body>
 </html>
