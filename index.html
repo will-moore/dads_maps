@@ -93,11 +93,7 @@
           zoom: 0,
         }),
       });
-
-      // Add Vector layer for the sight-line
-      const vectorLayer = new ol.layer.Vector({
-        source: new ol.source.Vector(),
-        style: new ol.style.Style({
+      let style0 = new ol.style.Style({
           stroke: new ol.style.Stroke({
             color: "#f0f",
             width: 2,
@@ -105,16 +101,81 @@
           fill: new ol.style.Fill({
             color: "rgba(255, 0, 255, 0)",
           }),
-        }),
+        });
+      
+      let style1 = new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: "#0f0",
+            width: 2,
+          }),
+          fill: new ol.style.Fill({
+            color: "rgba(0, 255, 0, 0.5)",
+          }),
+        });
+      let style2 = new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: "#f00",
+            width: 2,
+          }),
+          fill: new ol.style.Fill({
+            color: "rgba(255, 0, 0, 0.5)",
+          }),
+        });
+      let style3 = new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: "#00f",
+            width: 2,
+          }),
+          fill: new ol.style.Fill({
+            color: "rgba(0, 0, 1, 0.25)",
+          }),
+        });
+
+
+      // Add Vector layer for the sight-line
+      const vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: function(feature) {
+
+          return style0
+        }
       });
       map.addLayer(vectorLayer);
 
 
-      var drawRect = function (points, id) {
-        let x1 = parseInt(points[0]);
-        let y1 = parseInt(points[1]);
-        let x2 = parseInt(points[2]);
-        let y2 = parseInt(points[3]);
+      const overlapLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: style1
+      });
+      map.addLayer(overlapLayer);
+
+
+      function getOverlaps(mapData) {
+        let mapX = mapData.coords[0];
+        let mapY = mapData.coords[1];
+        // find any map that overlaps
+        let maps = DATA.filter(mapOv => {
+          if (mapOv.id == mapData.id) return false;
+          return mapOv.coords[0] > (mapX - 40000) && mapOv.coords[0] < (mapX + 40000) &&
+            mapOv.coords[3] > mapY && mapOv.coords[1] < (mapY + 40000)
+        });
+        console.log("overlaps", mapData.id, maps.length, maps);
+        return maps.map(mapOverlap => {
+          // get overlap coords...
+          let x1 = Math.max(mapOverlap.coords[0], mapData.coords[0]);
+          let x2 = Math.min(mapData.coords[2], mapOverlap.coords[2]);
+          let y1 =  Math.max(mapData.coords[1], mapOverlap.coords[1]);
+          let y2 = Math.min(mapData.coords[3], mapOverlap.coords[3]);
+          return [x1, y1, x2, y2]
+        })
+      }
+
+
+      var drawRect = function (points, id, layer, style) {
+        let x1 = points[0];
+        let y1 = points[1];
+        let x2 = points[2];
+        let y2 = points[3];
 
         var polygonFeature = new ol.Feature({
           id: id,
@@ -122,13 +183,44 @@
             [[x1, y1], [x1, y2], [x2, y2], [x2, y1]]
           ]),
         });
-        vectorLayer.getSource().addFeature(polygonFeature);
+        if (style) {
+          polygonFeature.setStyle(style);
+        }
+        layer.getSource().addFeature(polygonFeature);
         return polygonFeature;
       };
 
+      // First convert all points from String to Int
+      DATA.forEach(mapData => {
+        mapData.coords = mapData.coords.map(coord => parseInt(coord));
+      })
+
+      // Draw map outlines...
       DATA.forEach((element) => {
-        drawRect(element.coords, element.id);
+        drawRect(element.coords, element.id, vectorLayer);
       });
+
+      // draw overlaps...
+      let mostOverlap = 0;
+      let mostOverlapMap;
+      DATA.forEach(mapData => {
+        let overlaps = getOverlaps(mapData);
+        overlaps.forEach(coords => drawRect(coords, mapData.id+'overlap', overlapLayer));
+        if (overlaps.length === 0) {
+          drawRect(mapData.coords, mapData.id+'overlap', overlapLayer, style2);
+        } else {
+          const totalOverlap = overlaps
+            .map(coords => (coords[2] - coords[0]) * (coords[3] - coords[1]))
+            .reduce((prev, area) => prev + area, 0);
+          console.log("totalOverlap", totalOverlap);
+          if (totalOverlap > mostOverlap) {
+            mostOverlapMap = mapData;
+            mostOverlap = totalOverlap;
+          }
+        }
+      });
+      console.log("mostOverlapMap", mostOverlapMap);
+      drawRect(mostOverlapMap.coords, mostOverlapMap.id+'mostOverlap', overlapLayer, style3);
 
       // Handle location from browser...
       function locationCallback(position) {
