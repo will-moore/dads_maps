@@ -25,15 +25,52 @@
         width: 100%;
       }
 
-      #centreMap {
+      .controls {
         position: absolute;
         top: 10px;
-        right: 10px;
         background: white;
         border: solid 1px #ffbeff;
         border-radius: 10px;
+      }
+
+      button {
+        top: 10px;
         width: 40px;
         height: 40px;
+      }
+      #centreMap {
+        right: 10px;
+      }
+      #findGridRef {
+        right: 60px;
+      }
+      #gridrefForm {
+        top: 65px;
+        right: 10px;
+        left: 10px;
+        padding: 10px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      #gridrefForm label {
+        display: block;
+        flex: 1 1 auto;
+        white-space: nowrap;
+        font-size: 20px;
+        color: grey;
+      }
+      input {
+        width: 100%;
+        font-size: 24px;
+      }
+      input[name="letters"] {
+        flex: 1 1 30%;
+      }
+      input[name="numbers"] {
+        flex: 1 1 70%;
       }
     </style>
   </head>
@@ -41,9 +78,18 @@
   <body>
     <div id="map"></div>
 
-    <button id="centreMap" title="Click to centre map on your position">
+    <button id="centreMap" class="controls" title="Click to centre map on your position">
       <img src="images/crosshairs.png" style="width: 25px; height: 25px" />
     </button>
+    <button id="findGridRef" class="controls" title="Enter a grid reference to go to">
+      <img src="images/search.svg" style="width: 25px; height: 25px" />
+    </button>
+
+    <div id="gridrefForm" class="controls" style="visibility: hidden">
+      <label>Grid Ref</label>
+      <input id="gridRefLetters" name="letters" type="text" placeholder="NO"/>
+      <input id="gridRefNumbers" name="numbers" type="number" placeholder="573752"/>
+    </div>
 
     <script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
@@ -55,7 +101,7 @@
       var serviceUrl = "https://api.os.uk/maps/raster/v1/zxy";
 
       // https://www.movable-type.co.uk/scripts/latlong-os-gridref.html
-      import { LatLon } from "https://cdn.jsdelivr.net/npm/geodesy@2/osgridref.js";
+      import OsGridRef, { LatLon } from "https://cdn.jsdelivr.net/npm/geodesy@2/osgridref.js";
 
       // Setup the EPSG:27700 (British National Grid) projection.
       proj4.defs(
@@ -134,16 +180,7 @@
         drawRect(element.coords, element.id);
       });
 
-      // Handle location from browser...
-      function locationCallback(position) {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-        const wgs84 = new LatLon(latitude, longitude);
-        const gridref = wgs84.toOsGrid();
-        map.getView().setResolution(3);
-        map.getView().setCenter([gridref.easting, gridref.northing]);
-
-        // TODO: maybe don't ADD a feature each time!
+      function dropPin(gridref) {
         const iconFeature = new ol.Feature({
           geometry: new ol.geom.Point([gridref.easting, gridref.northing]),
         });
@@ -161,10 +198,55 @@
         vectorLayer.getSource().addFeature(iconFeature);
       }
 
+      // Handle location from browser...
+      function locationCallback(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const wgs84 = new LatLon(latitude, longitude);
+        const gridref = wgs84.toOsGrid();
+        map.getView().setResolution(3);
+        map.getView().setCenter([gridref.easting, gridref.northing]);
+
+        // TODO: maybe don't ADD a feature each time!
+        dropPin(gridref);
+      }
+
       if (!navigator.geolocation) {
         console.log("Geolocation is not supported by your browser");
         document.getElementById("centreMap").style.visibility = "hidden";
       }
+
+      // Event Listeners for Search Form...
+      const grLetters = document.getElementById("gridRefLetters");
+      const grNumbers = document.getElementById("gridRefNumbers");
+      document.getElementById("findGridRef").addEventListener("click", () => {
+        // button toggles visibility of form
+        let gridrefForm = document.getElementById("gridrefForm");
+        console.log("gridrefForm.style.visibility", gridrefForm.style.visibility);
+        let newVis = gridrefForm.style.visibility == "hidden" ? "visible" : "hidden";
+        gridrefForm.style.visibility = newVis;
+      });
+      grLetters.addEventListener("input", (event) => {
+        let value = event.target.value;
+        // if 2 letters entered, upper-case them and focus on Numbers
+        if (value.length == 2) {
+          grLetters.value = value.toUpperCase();
+          grNumbers.value = "";
+          grNumbers.focus();
+        }
+      });
+      grNumbers.addEventListener("input", (event) => {
+        let value = event.target.value;
+        // if 6 letters entered, go ahead and use...
+        if (value.length == 6) {
+          let gref = grLetters.value + " " + value;
+          console.log('gref', gref);
+          const gridref = OsGridRef.parse(gref);
+          console.log('gridref.easting, gridref.northing', gridref.easting, gridref.northing);
+          map.getView().setCenter([gridref.easting, gridref.northing]);
+          dropPin(gridref);
+        }
+      });
 
       // Click to centre map on current location...
       let btn = document.getElementById("centreMap");
