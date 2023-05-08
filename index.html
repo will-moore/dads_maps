@@ -42,17 +42,24 @@
         right: 10px;
       }
       #findGridRef {
-        right: 60px;
+        border: none;
+        background: transparent;
+        padding: 0;
+        height: 33px;
+        width: 33px;
       }
       #gridrefForm {
-        top: 65px;
-        right: 10px;
-        left: 10px;
-        padding: 10px;
+        top: 10px;
+        right: 60px;
+        padding: 3px 2px;
         display: flex;
         gap: 10px;
         align-items: center;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      #gridrefForm.expanded {
+        left: 45px;
+        padding: 10px;
       }
 
       #gridrefForm label {
@@ -65,6 +72,10 @@
       input {
         width: 100%;
         font-size: 24px;
+        display: none;
+      }
+      .expanded input {
+        display: inline;
       }
       input[name="letters"] {
         flex: 1 1 30%;
@@ -81,14 +92,14 @@
     <button id="centreMap" class="controls" title="Click to centre map on your position">
       <img src="images/crosshairs.png" style="width: 25px; height: 25px" />
     </button>
-    <button id="findGridRef" class="controls" title="Enter a grid reference to go to">
-      <img src="images/search.svg" style="width: 25px; height: 25px" />
-    </button>
 
-    <div id="gridrefForm" class="controls" style="visibility: hidden">
-      <label>Grid Ref</label>
+    <div id="gridrefForm" class="controls">
+      <!-- <label>Grid Ref</label> -->
       <input id="gridRefLetters" name="letters" type="text" placeholder="NO"/>
       <input id="gridRefNumbers" name="numbers" type="number" placeholder="573752"/>
+      <button id="findGridRef" title="Enter a grid reference to go to">
+        <img src="images/search.svg" style="width: 25px; height: 25px" />
+      </button>
     </div>
 
     <script src="https://labs.os.uk/public/os-api-branding/v0.2.0/os-api-branding.js"></script>
@@ -222,9 +233,7 @@
       document.getElementById("findGridRef").addEventListener("click", () => {
         // button toggles visibility of form
         let gridrefForm = document.getElementById("gridrefForm");
-        console.log("gridrefForm.style.visibility", gridrefForm.style.visibility);
-        let newVis = gridrefForm.style.visibility == "hidden" ? "visible" : "hidden";
-        gridrefForm.style.visibility = newVis;
+        gridrefForm.classList.toggle('expanded');
       });
       grLetters.addEventListener("input", (event) => {
         let value = event.target.value;
@@ -240,9 +249,7 @@
         // if 6 letters entered, go ahead and use...
         if (value.length == 6) {
           let gref = grLetters.value + " " + value;
-          console.log('gref', gref);
           const gridref = OsGridRef.parse(gref);
-          console.log('gridref.easting, gridref.northing', gridref.easting, gridref.northing);
           map.getView().setCenter([gridref.easting, gridref.northing]);
           dropPin(gridref);
         }
@@ -260,6 +267,14 @@
       // listen for map panning events - update URL with gridref and zoom...
       map.on("moveend", function (e) {
         let center = map.getView().getCenter();
+
+        // update grid-ref in form inputs
+        let gr = new OsGridRef(center[0], center[1]);
+        let grString = gr.toString(6);  // e.g. 'NO 306 735'
+        grLetters.value = grString.slice(0, 2);
+        grNumbers.value = grString.slice(3, 10).replace(" ", "");
+
+        // update URL - replaceState instead of add to history
         let gridref = center
           // round to 100 and to integer String
           .map((n) => (Math.round(n / 100) * 100).toFixed(0))
