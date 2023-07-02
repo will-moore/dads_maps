@@ -235,6 +235,9 @@
         let gridrefForm = document.getElementById("gridrefForm");
         gridrefForm.classList.toggle('expanded');
       });
+      grLetters.addEventListener("focus", (event) => {
+        grLetters.select();
+      });
       grLetters.addEventListener("input", (event) => {
         let value = event.target.value;
         // if 2 letters entered, upper-case them and focus on Numbers
